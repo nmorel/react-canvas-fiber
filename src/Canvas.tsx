@@ -1,41 +1,61 @@
-import * as React from 'react'
-import { CanvasRenderer } from './CanvasRenderer'
-import { render } from './ReactCanvasReconciler'
+import * as React from "react";
+import { CanvasRenderer } from "./CanvasRenderer";
+import { render } from "./ReactCanvasReconciler";
 
-export function Canvas({width, height, children}: {width: number, height: number, children: React.ReactElement}) {
-    const canvasRef = React.useRef<HTMLCanvasElement>()
-    const rendererRef = React.useRef<CanvasRenderer>()
-    
-    React.useLayoutEffect(() => {
-            rendererRef.current?.updateDimensions({width, height})
-    }, [width, height])
+export function Canvas({
+  width,
+  height,
+  children,
+  style,
+  ...canvasProps
+}: {
+  width: number;
+  height: number;
+  children: React.ReactElement;
+} & React.CanvasHTMLAttributes<HTMLCanvasElement>) {
+  const canvasRef = React.useRef<HTMLCanvasElement>();
+  const rendererRef = React.useRef<CanvasRenderer>();
 
-    React.useLayoutEffect(() => {
-        if (!rendererRef.current) {
-            rendererRef.current = new CanvasRenderer(canvasRef.current, {width, height})
-        }
-        return () => {
-            rendererRef.current?.dispose()
-            rendererRef.current = null
-        }
-    }, [])
+  React.useLayoutEffect(() => {
+    rendererRef.current?.updateDimensions({ width, height });
+  }, [width, height]);
 
-    const onInitCompRef = React.useRef(null)
-    if (!onInitCompRef.current) {
-        onInitCompRef.current = function OnInit(props: { children: React.ReactElement }): JSX.Element {
-            return props.children
-        }
+  React.useLayoutEffect(() => {
+    if (!rendererRef.current) {
+      rendererRef.current = new CanvasRenderer(canvasRef.current, {
+        width,
+        height,
+      });
     }
+    return () => {
+      rendererRef.current?.dispose();
+      rendererRef.current = null;
+    };
+  }, []);
 
-    React.useLayoutEffect(() => {
-        const OnInit = onInitCompRef.current
-        render(
-            <OnInit>{children}</OnInit>,
-            rendererRef.current,
-        )
-    }, [children])
+  const onInitCompRef = React.useRef(null);
+  if (!onInitCompRef.current) {
+    onInitCompRef.current = function OnInit(props: {
+      children: React.ReactElement;
+    }): JSX.Element {
+      return props.children;
+    };
+  }
 
-    return <canvas ref={canvasRef} width={width} height={height} style={{width, height}}  />
+  React.useLayoutEffect(() => {
+    const OnInit = onInitCompRef.current;
+    render(<OnInit>{children}</OnInit>, rendererRef.current);
+  }, [children]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      style={{ ...style, width, height }}
+      {...canvasProps}
+    />
+  );
 }
 
 /*

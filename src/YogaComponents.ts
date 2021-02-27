@@ -41,7 +41,9 @@ import {
   ALIGN_SPACE_BETWEEN,
   ALIGN_SPACE_AROUND,
   YogaEdge,
+  DIRECTION_LTR,
 } from "yoga-layout-prebuilt";
+import { HasChildren } from "./HasChildren";
 import { DimensionValue, TextStyle, ViewStyle } from "./Style";
 
 const flexDirectionToYoga: Record<
@@ -109,14 +111,16 @@ const alignContentToYoga: Record<ViewStyle["alignContent"], YogaAlign> = {
   "space-around": ALIGN_SPACE_AROUND,
 };
 
-export class View<Style extends ViewStyle> {
+export class View<Style extends ViewStyle> extends HasChildren {
   node: YogaNode;
   children: View<any>[];
   style: Style;
 
-  constructor({ style, children }) {
+  constructor({ style }) {
+    super();
+
     this.node = Node.create();
-    this.children = children || [];
+    this.children = [];
     this.style = style;
 
     this.layout();
@@ -241,10 +245,6 @@ export class View<Style extends ViewStyle> {
     this.setMargin(EDGE_RIGHT, this.style.marginRight);
     this.setMargin(EDGE_TOP, this.style.marginTop);
     this.setMargin(EDGE_VERTICAL, this.style.marginVertical);
-
-    this.children.map((child, index) =>
-      this.node.insertChild(child.node, index)
-    );
   }
 
   setMargin(edge: YogaEdge, margin: DimensionValue) {
@@ -273,6 +273,10 @@ export class View<Style extends ViewStyle> {
   render(ctx: CanvasRenderingContext2D) {
     if (this.style.display === "none") return;
 
+    if (this.node.isDirty()) {
+      this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
+    }
+
     ctx.save();
 
     if (this.style.transform) {
@@ -299,7 +303,7 @@ export class View<Style extends ViewStyle> {
     }
 
     if (this.style.opacity != null) {
-      ctx.globalAlpha = this.style.opacity
+      ctx.globalAlpha = this.style.opacity;
     }
 
     if (this.style.backgroundColor) {
@@ -370,6 +374,22 @@ export class View<Style extends ViewStyle> {
   }
 
   renderContent(ctx: CanvasRenderingContext2D) {}
+
+  addChild(child: View<any>) {
+    super.addChild(child);
+    this.node.insertChild(child.node, this.children.length - 1);
+  }
+
+  insertChildBefore(child: View<any>, beforeChild: View<any>) {
+    const index = super.insertChildBefore(child, beforeChild);
+    this.node.insertChild(child.node, index);
+    return index;
+  }
+
+  removeChild(child: View<any>) {
+    super.removeChild(child);
+    this.node.removeChild(child.node);
+  }
 }
 
 export class Text extends View<TextStyle> {
