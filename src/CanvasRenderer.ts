@@ -1,6 +1,6 @@
 import { DIRECTION_LTR } from "yoga-layout-prebuilt";
 import { ViewStyle } from "./Style";
-import { Base, Text } from "./YogaComponents";
+import { View, Text } from "./YogaComponents";
 
 function getRandomInt(max: number) {
   return Math.floor(Math.random() * Math.floor(max));
@@ -12,6 +12,8 @@ export class CanvasRenderer {
   containerWidth: number;
   containerHeight: number;
   scaleRatio = 1;
+
+  children: Array<View<any>> = []
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -47,16 +49,25 @@ export class CanvasRenderer {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    for (let i = 0; i < 10; i++) {
-      const item = generateItem({
-        translateX: getRandomInt(500),
-        translateY: getRandomInt(300),
-        scale: getRandomInt(3),
-      });
-      item.render(ctx);
-    }
+    console.log('draw', this.children)
+    this.children.forEach(child => child.render(ctx))
+    // for (let i = 0; i < 10; i++) {
+    //   const item = generateItem({
+    //     translateX: getRandomInt(500),
+    //     translateY: getRandomInt(300),
+    //     scale: getRandomInt(3),
+    //   });
+    //   item.render(ctx);
+    // }
 
     ctx.restore();
+  }
+  
+  addChild(child: View<any>) {
+    console.log('addChild')
+    this.children.push(child)
+    child.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
+    this.draw()
   }
 
   dispose() {
@@ -65,7 +76,7 @@ export class CanvasRenderer {
 }
 
 const generateItem = (transform: ViewStyle["transform"]) => {
-  const item = new Base({
+  const item = new View({
     style: {
       width: 160,
       backgroundColor: "yellow",
@@ -73,7 +84,7 @@ const generateItem = (transform: ViewStyle["transform"]) => {
       transform,
     },
     children: [
-      new Base({
+      new View({
         style: {
           margin: 5,
           width: 150,
@@ -90,14 +101,14 @@ const generateItem = (transform: ViewStyle["transform"]) => {
           }),
         ],
       }),
-      new Base({
+      new View({
         style: {
           padding: 5,
           flexDirection: "row",
           justifyContent: "space-between",
         },
         children: [
-          new Base({
+          new View({
             style: {
               flex: 0,
               width: 40,
@@ -105,7 +116,7 @@ const generateItem = (transform: ViewStyle["transform"]) => {
             },
             children: [],
           }),
-          new Base({
+          new View({
             style: {
               width: 60,
               height: 40,

@@ -28,9 +28,33 @@ export function App() {
             </header>
             <main ref={refContainer} style={{display: 'flex', flex: '1'}}>
                 {!!width && !!height && (
-                    <Canvas width={width} height={height} />
+                    <Canvas width={width} height={height}>
+                        <Rectangle />
+                    </Canvas>
                 )}
             </main>
         </div>
+    )
+}
+
+function Rectangle() {
+    return (
+        // @ts-ignore
+        <view style={{
+            width: 160,
+            height: 80,
+            backgroundColor: "yellow",
+            justifyContent: "center",
+            // @ts-ignore
+            transform: {
+                matrix: [1, 0, 0, 1, 50, 40],
+            },
+            padding: 5,
+        }}>
+            <view style={{
+                flex: 1,
+                backgroundColor: "green",
+            }}/>
+        </view>
     )
 }

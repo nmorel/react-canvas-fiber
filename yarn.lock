@@ -1786,6 +1786,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-reconciler@^0.26.0":
+  version "0.26.0"
+  resolved "https://npm.klaxoon.com/@types%2freact-reconciler/-/react-reconciler-0.26.0.tgz#fee923cb6621e6817ab4b84ad0f64707e4670a07"
+  integrity sha512-kWnVUzDqUkvibnYaLGH251qE9+HHhklA18Fuj556dvbb4atzPDrU2F3+Xpmlt4NuoEwYbWLJSnk/YKGeqN9Acg==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*", "@types/react@^17.0.2":
   version "17.0.2"
   resolved "https://npm.klaxoon.com/@types%2freact/-/react-17.0.2.tgz#3de24c4efef902dd9795a49c75f760cbe4f7a5a8"
@@ -1800,6 +1807,11 @@
   integrity sha512-auApPaJf3NPfe18hSoJkp8EbZzer2ISk7o8mCC3M9he/a04+gbMF97NkpD2S8riMGvm4BMRI59/SZQSaLTKpsQ==
   dependencies:
     "@types/node" "*"
+
+"@types/scheduler@^0.16.1":
+  version "0.16.1"
+  resolved "https://npm.klaxoon.com/@types%2fscheduler/-/scheduler-0.16.1.tgz#18845205e86ff0038517aab7a18a62a6b9f71275"
+  integrity sha512-EaCxbanVeyxDRTQBkdLb3Bvl/HK7PBK6UJjsSixB0iHKoWxE5uu2Q/DgtpOhPIojN0Zl1whvOd7PoHs2P0s5eA==
 
 "@types/source-list-map@*":
   version "0.1.2"

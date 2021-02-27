@@ -109,9 +109,9 @@ const alignContentToYoga: Record<ViewStyle["alignContent"], YogaAlign> = {
   "space-around": ALIGN_SPACE_AROUND,
 };
 
-export class Base<Style extends ViewStyle> {
+export class View<Style extends ViewStyle> {
   node: YogaNode;
-  children: Base<any>[];
+  children: View<any>[];
   style: Style;
 
   constructor({ style, children }) {
@@ -372,7 +372,7 @@ export class Base<Style extends ViewStyle> {
   renderContent(ctx: CanvasRenderingContext2D) {}
 }
 
-export class Text extends Base<TextStyle> {
+export class Text extends View<TextStyle> {
   text: string;
 
   constructor({
@@ -381,7 +381,7 @@ export class Text extends Base<TextStyle> {
   }: {
     text: string;
     style: TextStyle;
-    children: Base<any>[];
+    children: View<any>[];
   }) {
     super(props);
     this.text = text;

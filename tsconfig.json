@@ -22,5 +22,8 @@
   },
   "include": [
     "src"
+  ],
+  "files": [
+    "src/renderer-types.d.ts"
   ]
 }
