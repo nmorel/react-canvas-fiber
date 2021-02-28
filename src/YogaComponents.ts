@@ -126,6 +126,11 @@ export class View<Style extends ViewStyle> extends HasChildren {
     this.layout();
   }
 
+  update({ style }: { style?: Style }) {
+    this.style = style;
+    this.layout();
+  }
+
   layout() {
     if (this.style.display === "none") return;
 
@@ -395,14 +400,7 @@ export class View<Style extends ViewStyle> extends HasChildren {
 export class Text extends View<TextStyle> {
   text: string;
 
-  constructor({
-    text,
-    ...props
-  }: {
-    text: string;
-    style: TextStyle;
-    children: View<any>[];
-  }) {
+  constructor({ text, ...props }: { text: string; style: TextStyle }) {
     super(props);
     this.text = text;
     this.node.setMeasureFunc(() => {
@@ -416,6 +414,11 @@ export class Text extends View<TextStyle> {
         height: props.style.fontSize ?? 16,
       };
     });
+  }
+
+  update(props: { style: TextStyle; text: string }) {
+    this.text = props.text;
+    super.update(props);
   }
 
   renderContent(ctx: CanvasRenderingContext2D) {

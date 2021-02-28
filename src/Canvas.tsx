@@ -11,7 +11,7 @@ export function Canvas({
 }: {
   width: number;
   height: number;
-  children: React.ReactElement;
+  children: any;
 } & React.CanvasHTMLAttributes<HTMLCanvasElement>) {
   const canvasRef = React.useRef<HTMLCanvasElement>();
   const rendererRef = React.useRef<CanvasRenderer>();

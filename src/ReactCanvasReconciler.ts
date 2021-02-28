@@ -52,9 +52,9 @@ let Renderer = Reconciler({
       children,
       ...props
     },
-    rootContainerInstance,
+    rootContainer,
     hostContext,
-    internalInstanceHandle
+    internalHandle
   ) {
     switch (type) {
       case "view": {
@@ -70,35 +70,18 @@ let Renderer = Reconciler({
     }
   },
 
+  prepareUpdate(instance, type, oldProps, newProps, rootContainer, hostContext) {
+    return newProps;
+  },
   commitUpdate(
     instance: any,
     updatePayload: any,
     type: string,
-    oldProps: any,
-    newProps: any,
-    fiber: Reconciler.Fiber
+    prevProps: any,
+    nextProps: any,
+    internalHandle: Reconciler.Fiber
   ) {
-    //   if (instance.__instance && newProps.object && newProps.object !== instance) {
-    //     // <instance object={...} /> where the object reference has changed
-    //     switchInstance(instance, type, newProps, fiber)
-    //   } else {
-    //     // This is a data object, let's extract critical information about it
-    //     const { args: argsNew = [], ...restNew } = newProps
-    //     const { args: argsOld = [], ...restOld } = oldProps
-    //     // If it has new props or arguments, then it needs to be re-instanciated
-    //     const hasNewArgs = argsNew.some((value: any, index: number) =>
-    //       is.obj(value)
-    //         ? Object.entries(value).some(([key, val]) => val !== argsOld[index][key])
-    //         : value !== argsOld[index]
-    //     )
-    //     if (hasNewArgs) {
-    //       // Next we create a new instance and append it again
-    //       switchInstance(instance, type, newProps, fiber)
-    //     } else {
-    //       // Otherwise just overwrite props
-    //       applyProps(instance, restNew, restOld, true)
-    //     }
-    //   }
+    instance.update(nextProps)
   },
 
   appendChild,
@@ -111,13 +94,13 @@ let Renderer = Reconciler({
   removeChild,
   removeChildFromContainer: removeChild,
 
-  hideInstance(instance: any) {
+  hideInstance(instance) {
     //   if (instance.isObject3D) {
     //     instance.visible = false
     //     invalidateInstance(instance)
     //   }
   },
-  unhideInstance(instance: any) {
+  unhideInstance(instance) {
     //   if ((instance.isObject3D && props.visible == null) || props.visible) {
     //     instance.visible = true
     //     invalidateInstance(instance)
@@ -144,41 +127,36 @@ let Renderer = Reconciler({
               })
             ),
 
-  getPublicInstance(instance: any) {
+  getPublicInstance(instance) {
     return instance;
   },
-  getRootHostContext() {
+  getRootHostContext(rootContainer) {
     return emptyObject;
   },
-  getChildHostContext() {
+  getChildHostContext(parentHostContext, type, rootContainer) {
     return emptyObject;
   },
-  finalizeInitialChildren(instance: any) {
-    // https://github.com/facebook/react/issues/20271
-    // Returning true will trigger commitMount
-    return instance.__handlers;
+  finalizeInitialChildren(instance, type, props, rootContainer, hostContext) {
+    return false;
   },
-  commitMount(instance: any /*, type, props*/) {
+  commitMount(instance, type, props, internalInstanceHandle) {
     // https://github.com/facebook/react/issues/20271
     // This will make sure events are only added once to the central container
     const container = instance.__container;
     if (container && instance.raycast && instance.__handlers)
       container.__interaction.push(instance);
   },
-  prepareUpdate() {
-    return emptyObject;
-  },
-  prepareForCommit() {
+  prepareForCommit(container) {
     return null;
   },
-  preparePortalMount() {
+  preparePortalMount(container) {
     // noop
   },
   resetAfterCommit(container) {
-    container.draw()
+    container.draw();
   },
-  clearContainer() {
-    return false;
+  clearContainer(container) {
+    // noop
   },
 
   // Text operations, should not happen
@@ -193,7 +171,7 @@ let Renderer = Reconciler({
     );
   },
   shouldSetTextContent() {
-    return false
+    return false;
   },
 });
 
