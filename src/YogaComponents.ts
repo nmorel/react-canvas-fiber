@@ -432,3 +432,82 @@ export class Text extends View<TextStyle> {
     );
   }
 }
+
+export class Image extends View<ViewStyle> {
+  imageUrl: string;
+
+  imageUrlLoading?: string;
+  imagePromise?: Promise<any>;
+  image?: HTMLImageElement;
+
+  constructor({ imageUrl, ...props }: { imageUrl: string; style: ViewStyle }) {
+    super(props);
+    this.imageUrl = imageUrl;
+  }
+
+  update(props: { style: TextStyle; imageUrl: string }) {
+    this.imageUrl = props.imageUrl;
+    super.update(props);
+  }
+
+  renderContent(ctx: CanvasRenderingContext2D) {
+    if (!this.imageUrl) {
+      return;
+    }
+
+    if (this.imageUrlLoading !== this.imageUrl) {
+      this.imagePromise = null;
+      this.image = null;
+      this.imageUrlLoading = this.imageUrl;
+    }
+
+    if (!this.image && !this.imagePromise) {
+      this.imagePromise = new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new window.Image();
+        image.onload = () => {
+          image.onload = null;
+          image.onerror = null;
+          resolve(image);
+        };
+        image.onerror = () => {
+          image.onload = null;
+          image.onerror = null;
+          reject();
+        };
+        image.src = this.imageUrl;
+      }).then((image) => {
+        this.image = image;
+        this.imagePromise = null;
+      });
+    }
+
+    if (this.imagePromise) {
+      // throw
+      return;
+    }
+
+    const cw = this.node.getComputedWidth();
+    const ch = this.node.getComputedHeight();
+    const ratioContainer = cw / ch;
+    const iw = this.image.width;
+    const ih = this.image.height;
+    const ratioImg = iw / ih;
+    let dw: number;
+    let dh: number;
+    if (iw >= ih) {
+      dw = cw / (ratioContainer / ratioImg);
+      dh = dw / ratioImg;
+    } else {
+      dh = ch / (ratioContainer / ratioImg);
+      dw = dh / ratioImg;
+    }
+
+    ctx.drawImage(
+      this.image,
+      this.node.getComputedLeft() + (cw - dw) / 2,
+      this.node.getComputedTop()+ (ch - dh) / 2,
+      dw,
+      dh
+    );
+  }
+}

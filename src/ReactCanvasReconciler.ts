@@ -5,7 +5,7 @@ import {
   unstable_runWithPriority as run,
 } from "scheduler";
 import { CanvasRenderer } from "./CanvasRenderer";
-import { Text, View } from "./YogaComponents";
+import { Image, Text, View } from "./YogaComponents";
 
 const roots = new Map<CanvasRenderer, Reconciler.FiberRoot>();
 const emptyObject = {};
@@ -64,6 +64,10 @@ let Renderer = Reconciler({
       case "text": {
         // @ts-ignore
         return new Text(props);
+      }
+      case "image": {
+        // @ts-ignore
+        return new Image(props);
       }
       default:
         return null;

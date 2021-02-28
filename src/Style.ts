@@ -10,7 +10,7 @@ export type EdgeInsetsValue = {
   bottom: number;
 };
 
-export type DimensionValue = null | number | string;
+export type DimensionValue = number | string;
 
 type ColorValue = string;
 

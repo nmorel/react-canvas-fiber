@@ -1,6 +1,7 @@
 import * as React from "react";
 import ResizeObserver from "resize-observer-polyfill";
 import { Canvas } from "./Canvas";
+import reactImageUrl from "./react.png";
 
 export function App() {
   const refContainer = React.useRef();
@@ -43,6 +44,15 @@ export function App() {
       text: "World",
       color: "red",
     },
+    {
+      id: "3",
+      left: 40,
+      top: 450,
+      width: 300,
+      height: 180,
+      imageUrl: reactImageUrl,
+      color: "red",
+    },
   ]);
 
   return (
@@ -62,6 +72,7 @@ export function App() {
           <Canvas
             width={width}
             height={height}
+            style={{ userSelect: "none" }}
             onClick={(ev) => {
               ev.preventDefault();
               setItems((it) => {
@@ -82,7 +93,7 @@ export function App() {
 }
 
 function Rectangle({ item }) {
-  const { width, height, left, top, text, color } = item;
+  const { width, height, left, top, text, imageUrl, color } = item;
   return (
     // @ts-ignore
     <view
@@ -108,11 +119,19 @@ function Rectangle({ item }) {
           borderRadius: 5,
         }}
       >
-        <text
-          // @ts-ignore
-          text={text}
-          style={{ color: "white", fontSize: 32 }}
-        />
+        {imageUrl ? (
+          <image
+            // @ts-ignore
+            imageUrl={imageUrl}
+            style={{flex: 1, width: '100%', height: '100%'}}
+          />
+        ) : (
+          <text
+            // @ts-ignore
+            text={text}
+            style={{ color: "white", fontSize: 32 }}
+          />
+        )}
       </view>
     </view>
   );
