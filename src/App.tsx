@@ -3,8 +3,45 @@ import ResizeObserver from "resize-observer-polyfill";
 import { Canvas } from "./Canvas";
 import reactImageUrl from "./react.png";
 
+const itemText1 = {
+  id: "1",
+  kind: "text" as const,
+  left: 40,
+  top: 50,
+  width: 300,
+  height: 180,
+  color: "green",
+  text: "Hello",
+};
+
+const itemText2 = {
+  id: "2",
+  kind: "text" as const,
+  left: 40,
+  top: 240,
+  width: 300,
+  height: 180,
+  color: "red",
+  text: "World",
+};
+
+const itemImage1 = {
+  id: "3",
+  kind: "image" as const,
+  left: 40,
+  top: 450,
+  width: 300,
+  height: 180,
+  color: "red",
+  imageUrl: reactImageUrl,
+};
+
+const defaultItems = [itemText1, itemText2, itemImage1];
+
+type Item = typeof itemText1 | typeof itemImage1;
+
 export function App() {
-  const refContainer = React.useRef();
+  const refContainer = React.useRef<HTMLElement>(null);
   const [{ width, height }, setSize] = React.useState({ width: 0, height: 0 });
   React.useLayoutEffect(() => {
     const element = refContainer.current;
@@ -25,35 +62,7 @@ export function App() {
     };
   }, []);
 
-  const [items, setItems] = React.useState(() => [
-    {
-      id: "1",
-      left: 40,
-      top: 50,
-      width: 300,
-      height: 180,
-      text: "Hello",
-      color: "green",
-    },
-    {
-      id: "2",
-      left: 40,
-      top: 240,
-      width: 300,
-      height: 180,
-      text: "World",
-      color: "red",
-    },
-    {
-      id: "3",
-      left: 40,
-      top: 450,
-      width: 300,
-      height: 180,
-      imageUrl: reactImageUrl,
-      color: "red",
-    },
-  ]);
+  const [items, setItems] = React.useState(() => defaultItems);
 
   return (
     <div
@@ -92,17 +101,15 @@ export function App() {
   );
 }
 
-function Rectangle({ item }) {
-  const { width, height, left, top, text, imageUrl, color } = item;
+function Rectangle({ item }: { item: Item }) {
+  const { width, height, left, top, color } = item;
   return (
-    // @ts-ignore
-    <view
+    <c-view
       style={{
         width,
         height,
         backgroundColor: "yellow",
         justifyContent: "center",
-        // @ts-ignore
         transform: {
           matrix: [1, 0, 0, 1, left, top],
         },
@@ -110,7 +117,7 @@ function Rectangle({ item }) {
         borderRadius: 5,
       }}
     >
-      <view
+      <c-view
         style={{
           flex: 1,
           backgroundColor: color,
@@ -119,20 +126,15 @@ function Rectangle({ item }) {
           borderRadius: 5,
         }}
       >
-        {imageUrl ? (
-          <image
-            // @ts-ignore
-            imageUrl={imageUrl}
-            style={{flex: 1, width: '100%', height: '100%'}}
+        {item.kind === "image" ? (
+          <c-image
+            imageUrl={item.imageUrl}
+            style={{ flex: 1, width: "100%", height: "100%" }}
           />
         ) : (
-          <text
-            // @ts-ignore
-            text={text}
-            style={{ color: "white", fontSize: 32 }}
-          />
+          <c-text text={item.text} style={{ color: "white", fontSize: 32 }} />
         )}
-      </view>
-    </view>
+      </c-view>
+    </c-view>
   );
 }

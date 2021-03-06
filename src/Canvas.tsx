@@ -13,15 +13,15 @@ export function Canvas({
   height: number;
   children: any;
 } & React.CanvasHTMLAttributes<HTMLCanvasElement>) {
-  const canvasRef = React.useRef<HTMLCanvasElement>();
-  const rendererRef = React.useRef<CanvasRenderer>();
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rendererRef = React.useRef<CanvasRenderer | null>();
 
   React.useLayoutEffect(() => {
     rendererRef.current?.updateDimensions({ width, height });
   }, [width, height]);
 
   React.useLayoutEffect(() => {
-    if (!rendererRef.current) {
+    if (!rendererRef.current && canvasRef.current) {
       rendererRef.current = new CanvasRenderer(canvasRef.current, {
         width,
         height,
@@ -33,7 +33,9 @@ export function Canvas({
     };
   }, []);
 
-  const onInitCompRef = React.useRef(null);
+  const onInitCompRef = React.useRef<React.FC<{
+    children: React.ReactElement;
+  }> | null>();
   if (!onInitCompRef.current) {
     onInitCompRef.current = function OnInit(props: {
       children: React.ReactElement;
@@ -43,6 +45,8 @@ export function Canvas({
   }
 
   React.useLayoutEffect(() => {
+    if (!rendererRef.current || !onInitCompRef.current) return;
+
     const OnInit = onInitCompRef.current;
     render(<OnInit>{children}</OnInit>, rendererRef.current);
   }, [children]);
@@ -57,17 +61,3 @@ export function Canvas({
     />
   );
 }
-
-/*
-react three fiber
-targets/web.tsx => 
-    main Canvas component
-targets/shared/web/ResizeContainer => 
-    creates the div container, render/creates the canvas element given by web.tsx
-    get the size of the container using react-use-measure
-    creates the webgl renderer calling the renderer method given by web.tsx
-    calls useCanvas with the webgl renderer (gl) and the container sizes (props: children, gl, size, forceResize)
-canvas.tsx => 
-    init stuff
-    call the custom react renderer with children
-*/

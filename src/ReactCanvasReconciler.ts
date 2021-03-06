@@ -5,6 +5,7 @@ import {
   unstable_runWithPriority as run,
 } from "scheduler";
 import { CanvasRenderer } from "./CanvasRenderer";
+import { HasChildren } from "./HasChildren";
 import { Image, Text, View } from "./YogaComponents";
 
 const roots = new Map<CanvasRenderer, Reconciler.FiberRoot>();
@@ -31,16 +32,20 @@ const is = {
   },
 };
 
-function appendChild(parentInstance, child) {
-  parentInstance.addChild(child);
+function appendChild(parentInstance: HasChildren | null, child: View<any>) {
+  parentInstance?.addChild(child);
 }
 
-function insertBefore(parentInstance, child, beforeChild) {
-  parentInstance.insertChildBefore(child, beforeChild);
+function insertBefore(
+  parentInstance: HasChildren | null,
+  child: View<any>,
+  beforeChild: View<any>
+) {
+  parentInstance?.insertChildBefore(child, beforeChild);
 }
 
-function removeChild(parentInstance, child) {
-  parentInstance.removeChild(child);
+function removeChild(parentInstance: HasChildren | null, child: View<any>) {
+  parentInstance?.removeChild(child);
 }
 
 let Renderer = Reconciler({
@@ -74,7 +79,14 @@ let Renderer = Reconciler({
     }
   },
 
-  prepareUpdate(instance, type, oldProps, newProps, rootContainer, hostContext) {
+  prepareUpdate(
+    instance,
+    type,
+    oldProps,
+    newProps,
+    rootContainer,
+    hostContext
+  ) {
     return newProps;
   },
   commitUpdate(
@@ -85,7 +97,7 @@ let Renderer = Reconciler({
     nextProps: any,
     internalHandle: Reconciler.Fiber
   ) {
-    instance.update(nextProps)
+    instance.update(nextProps);
   },
 
   appendChild,
@@ -146,9 +158,9 @@ let Renderer = Reconciler({
   commitMount(instance, type, props, internalInstanceHandle) {
     // https://github.com/facebook/react/issues/20271
     // This will make sure events are only added once to the central container
-    const container = instance.__container;
-    if (container && instance.raycast && instance.__handlers)
-      container.__interaction.push(instance);
+    // const container = instance.__container;
+    // if (container && instance.raycast && instance.__handlers)
+    //   container.__interaction.push(instance);
   },
   prepareForCommit(container) {
     return null;
@@ -157,7 +169,8 @@ let Renderer = Reconciler({
     // noop
   },
   resetAfterCommit(container) {
-    container.draw();
+    // @ts-ignore
+    container?.draw();
   },
   clearContainer(container) {
     // noop

@@ -47,7 +47,7 @@ import { HasChildren } from "./HasChildren";
 import { DimensionValue, TextStyle, ViewStyle } from "./Style";
 
 const flexDirectionToYoga: Record<
-  ViewStyle["flexDirection"],
+  Exclude<ViewStyle["flexDirection"], undefined>,
   YogaFlexDirection
 > = {
   row: FLEX_DIRECTION_ROW,
@@ -56,25 +56,34 @@ const flexDirectionToYoga: Record<
   "column-reverse": FLEX_DIRECTION_COLUMN_REVERSE,
 };
 
-const flexWrapToYoga: Record<ViewStyle["flexWrap"], YogaFlexWrap> = {
+const flexWrapToYoga: Record<
+  Exclude<ViewStyle["flexWrap"], undefined>,
+  YogaFlexWrap
+> = {
   wrap: WRAP_WRAP,
   nowrap: WRAP_NO_WRAP,
   "wrap-reverse": WRAP_WRAP_REVERSE,
 };
 
-const overflowToYoga: Record<ViewStyle["overflow"], YogaOverflow> = {
+const overflowToYoga: Record<
+  Exclude<ViewStyle["overflow"], undefined>,
+  YogaOverflow
+> = {
   hidden: OVERFLOW_HIDDEN,
   visible: OVERFLOW_VISIBLE,
   scroll: OVERFLOW_SCROLL,
 };
 
-const positionToYoga: Record<ViewStyle["position"], YogaPositionType> = {
+const positionToYoga: Record<
+  Exclude<ViewStyle["position"], undefined>,
+  YogaPositionType
+> = {
   relative: POSITION_TYPE_RELATIVE,
   absolute: POSITION_TYPE_ABSOLUTE,
 };
 
 const justifyContentToYoga: Record<
-  ViewStyle["justifyContent"],
+  Exclude<ViewStyle["justifyContent"], undefined>,
   YogaJustifyContent
 > = {
   "flex-start": JUSTIFY_FLEX_START,
@@ -85,7 +94,10 @@ const justifyContentToYoga: Record<
   "space-evenly": JUSTIFY_SPACE_EVENLY,
 };
 
-const alignItemsToYoga: Record<ViewStyle["alignItems"], YogaAlign> = {
+const alignItemsToYoga: Record<
+  Exclude<ViewStyle["alignItems"], undefined>,
+  YogaAlign
+> = {
   "flex-start": ALIGN_FLEX_START,
   "flex-end": ALIGN_FLEX_END,
   center: ALIGN_CENTER,
@@ -93,7 +105,10 @@ const alignItemsToYoga: Record<ViewStyle["alignItems"], YogaAlign> = {
   baseline: ALIGN_BASELINE,
 };
 
-const alignSelfToYoga: Record<ViewStyle["alignSelf"], YogaAlign> = {
+const alignSelfToYoga: Record<
+  Exclude<ViewStyle["alignSelf"], undefined>,
+  YogaAlign
+> = {
   auto: ALIGN_AUTO,
   "flex-start": ALIGN_FLEX_START,
   "flex-end": ALIGN_FLEX_END,
@@ -102,7 +117,10 @@ const alignSelfToYoga: Record<ViewStyle["alignSelf"], YogaAlign> = {
   baseline: ALIGN_BASELINE,
 };
 
-const alignContentToYoga: Record<ViewStyle["alignContent"], YogaAlign> = {
+const alignContentToYoga: Record<
+  Exclude<ViewStyle["alignContent"], undefined>,
+  YogaAlign
+> = {
   "flex-start": ALIGN_FLEX_START,
   "flex-end": ALIGN_FLEX_END,
   center: ALIGN_CENTER,
@@ -116,7 +134,7 @@ export class View<Style extends ViewStyle> extends HasChildren {
   children: View<any>[];
   style: Style;
 
-  constructor({ style }) {
+  constructor({ style }: { style: Style }) {
     super();
 
     this.node = Node.create();
@@ -126,7 +144,7 @@ export class View<Style extends ViewStyle> extends HasChildren {
     this.layout();
   }
 
-  update({ style }: { style?: Style }) {
+  update({ style }: { style: Style }) {
     this.style = style;
     this.layout();
   }
@@ -252,7 +270,7 @@ export class View<Style extends ViewStyle> extends HasChildren {
     this.setMargin(EDGE_VERTICAL, this.style.marginVertical);
   }
 
-  setMargin(edge: YogaEdge, margin: DimensionValue) {
+  setMargin(edge: YogaEdge, margin: DimensionValue | null | undefined) {
     if (margin == null) {
       return;
     }
@@ -327,32 +345,38 @@ export class View<Style extends ViewStyle> extends HasChildren {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(this.node.getComputedWidth(), 0);
-      ctx.lineWidth = this.style.borderTopWidth || this.style.borderWidth;
-      ctx.strokeStyle = this.style.borderTopColor || this.style.borderColor;
+      ctx.lineWidth = this.style.borderTopWidth || this.style.borderWidth || 0;
+      ctx.strokeStyle =
+        this.style.borderTopColor || this.style.borderColor || "";
       ctx.stroke();
     }
     if (this.style.borderLeftColor || this.style.borderColor) {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, this.node.getComputedHeight());
-      ctx.lineWidth = this.style.borderLeftWidth || this.style.borderWidth;
-      ctx.strokeStyle = this.style.borderLeftColor || this.style.borderColor;
+      ctx.lineWidth = this.style.borderLeftWidth || this.style.borderWidth || 0;
+      ctx.strokeStyle =
+        this.style.borderLeftColor || this.style.borderColor || "";
       ctx.stroke();
     }
     if (this.style.borderBottomColor || this.style.borderColor) {
       ctx.beginPath();
       ctx.moveTo(0, this.node.getComputedHeight());
       ctx.lineTo(this.node.getComputedWidth(), this.node.getComputedHeight());
-      ctx.lineWidth = this.style.borderBottomWidth || this.style.borderWidth;
-      ctx.strokeStyle = this.style.borderBottomColor || this.style.borderColor;
+      ctx.lineWidth =
+        this.style.borderBottomWidth || this.style.borderWidth || 0;
+      ctx.strokeStyle =
+        this.style.borderBottomColor || this.style.borderColor || "";
       ctx.stroke();
     }
     if (this.style.borderRightColor || this.style.borderColor) {
       ctx.beginPath();
       ctx.moveTo(this.node.getComputedWidth(), 0);
       ctx.lineTo(this.node.getComputedWidth(), this.node.getComputedHeight());
-      ctx.lineWidth = this.style.borderRightWidth || this.style.borderWidth;
-      ctx.strokeStyle = this.style.borderRightColor || this.style.borderColor;
+      ctx.lineWidth =
+        this.style.borderRightWidth || this.style.borderWidth || 0;
+      ctx.strokeStyle =
+        this.style.borderRightColor || this.style.borderColor || "";
       ctx.stroke();
     }
 
@@ -407,10 +431,12 @@ export class Text extends View<TextStyle> {
       // TODO add real measurement
       const canvas = new OffscreenCanvas(1000, 1000);
       const ctx = canvas.getContext("2d");
-      ctx.font = `${this.style.fontSize ?? 16}px sans-serif`;
-      const metrics = ctx.measureText(text);
+      if (ctx) {
+        ctx.font = `${this.style.fontSize ?? 16}px sans-serif`;
+      }
+      const metrics = ctx?.measureText(text);
       return {
-        width: metrics.width,
+        width: metrics?.width || 0,
         height: props.style.fontSize ?? 16,
       };
     });
@@ -436,9 +462,9 @@ export class Text extends View<TextStyle> {
 export class Image extends View<ViewStyle> {
   imageUrl: string;
 
-  imageUrlLoading?: string;
-  imagePromise?: Promise<any>;
-  image?: HTMLImageElement;
+  imageUrlLoading: string | null = null;
+  imagePromise: Promise<any> | null = null;
+  image: HTMLImageElement | null = null;
 
   constructor({ imageUrl, ...props }: { imageUrl: string; style: ViewStyle }) {
     super(props);
@@ -481,7 +507,7 @@ export class Image extends View<ViewStyle> {
       });
     }
 
-    if (this.imagePromise) {
+    if (this.imagePromise || !this.image) {
       // throw
       return;
     }
@@ -505,7 +531,7 @@ export class Image extends View<ViewStyle> {
     ctx.drawImage(
       this.image,
       this.node.getComputedLeft() + (cw - dw) / 2,
-      this.node.getComputedTop()+ (ch - dh) / 2,
+      this.node.getComputedTop() + (ch - dh) / 2,
       dw,
       dh
     );

@@ -3,8 +3,8 @@ import { HasChildren } from "./HasChildren";
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
-  containerWidth: number;
-  containerHeight: number;
+  containerWidth = 0;
+  containerHeight = 0;
   scaleRatio = 1;
 
   constructor(
@@ -14,7 +14,11 @@ export class CanvasRenderer extends HasChildren {
     super();
 
     this.canvas = canvas;
-    this.context = canvas.getContext("2d", { alpha: true });
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) {
+      throw new Error(`Can't create a 2d context on canvas`);
+    }
+    this.context = context;
     this.updateDimensions(options);
   }
 
@@ -30,7 +34,7 @@ export class CanvasRenderer extends HasChildren {
   }
 
   draw() {
-    console.log('drawing canvas')
+    console.log("drawing canvas");
     const ctx = this.context;
     ctx.clearRect(
       0,
