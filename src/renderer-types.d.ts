@@ -14,7 +14,7 @@ declare global {
         children?: ReactElement;
       };
       "c-image": {
-        imageUrl: string;
+        image: HTMLImageElement;
         style?: ImageStyle;
         children?: ReactElement;
       };

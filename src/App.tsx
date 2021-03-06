@@ -1,7 +1,9 @@
 import * as React from "react";
 import ResizeObserver from "resize-observer-polyfill";
+import { createAsset } from "use-asset";
 import { Canvas } from "./Canvas";
-import reactImageUrl from "./react.png";
+import largeImagePlaceholder from "./react.png";
+import largeImage from "./large_image_original.jpeg";
 
 const itemText1 = {
   id: "1",
@@ -33,7 +35,8 @@ const itemImage1 = {
   width: 300,
   height: 180,
   color: "red",
-  imageUrl: reactImageUrl,
+  placeholderUrl: largeImagePlaceholder,
+  imageUrl: largeImage,
 };
 
 const defaultItems = [itemText1, itemText2, itemImage1];
@@ -127,14 +130,50 @@ function Rectangle({ item }: { item: Item }) {
         }}
       >
         {item.kind === "image" ? (
-          <c-image
-            imageUrl={item.imageUrl}
-            style={{ flex: 1, width: "100%", height: "100%" }}
-          />
+          <React.Suspense
+            fallback={
+              <React.Suspense fallback={null}>
+                <Image
+                  imageUrl={item.placeholderUrl}
+                  style={{ flex: 1, width: "100%", height: "100%" }}
+                />
+              </React.Suspense>
+            }
+          >
+            <Image
+              imageUrl={item.imageUrl}
+              style={{ flex: 1, width: "100%", height: "100%" }}
+            />
+          </React.Suspense>
         ) : (
           <c-text text={item.text} style={{ color: "white", fontSize: 32 }} />
         )}
       </c-view>
     </c-view>
   );
+}
+
+const imageAsset = createAsset((imageUrl: string) => {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => {
+      image.onload = null;
+      image.onerror = null;
+      resolve(image);
+    };
+    image.onerror = () => {
+      image.onload = null;
+      image.onerror = null;
+      reject();
+    };
+    image.src = imageUrl;
+  });
+});
+
+function Image({
+  imageUrl,
+  ...props
+}: Omit<JSX.IntrinsicElements["c-image"], "image"> & { imageUrl: string }) {
+  const image = imageAsset.read(imageUrl);
+  return <c-image image={image} {...props} />;
 }

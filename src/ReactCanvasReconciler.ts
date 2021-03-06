@@ -62,15 +62,15 @@ let Renderer = Reconciler({
     internalHandle
   ) {
     switch (type) {
-      case "view": {
+      case "c-view": {
         // @ts-ignore
         return new View(props);
       }
-      case "text": {
+      case "c-text": {
         // @ts-ignore
         return new Text(props);
       }
-      case "image": {
+      case "c-image": {
         // @ts-ignore
         return new Image(props);
       }
