@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactNode } from "react";
 import { ImageStyle, TextStyle, ViewStyle } from "./Style";
 
 declare global {
@@ -6,17 +6,17 @@ declare global {
     interface IntrinsicElements {
       "c-view": {
         style?: ViewStyle;
-        children?: ReactElement;
+        children?: ReactNode;
       };
       "c-text": {
         text: string;
         style?: TextStyle;
-        children?: ReactElement;
+        children?: ReactNode;
       };
       "c-image": {
         image: HTMLImageElement;
         style?: ImageStyle;
-        children?: ReactElement;
+        children?: ReactNode;
       };
     }
   }

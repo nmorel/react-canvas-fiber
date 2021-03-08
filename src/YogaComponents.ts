@@ -329,56 +329,127 @@ export class View<Style extends ViewStyle> extends HasChildren {
       ctx.globalAlpha = this.style.opacity;
     }
 
-    if (this.style.backgroundColor) {
-      ctx.beginPath();
-      ctx.rect(
-        this.node.getComputedLeft(),
-        this.node.getComputedTop(),
-        this.node.getComputedWidth(),
-        this.node.getComputedHeight()
-      );
-      ctx.fillStyle = this.style.backgroundColor;
-      ctx.fill();
+    const borderTopLeftRadius =
+      this.style.borderTopLeftRadius || this.style.borderRadius;
+    const borderTopRightRadius =
+      this.style.borderTopRightRadius || this.style.borderRadius;
+    const borderBottomLeftRadius =
+      this.style.borderBottomLeftRadius || this.style.borderRadius;
+    const borderBottomRightRadius =
+      this.style.borderBottomRightRadius || this.style.borderRadius;
+
+    const top = this.node.getComputedTop();
+    const left = this.node.getComputedLeft();
+    const right = left + this.node.getComputedWidth();
+    const bottom = top + this.node.getComputedHeight();
+
+    if (this.style.backgroundColor || this.style.borderColor) {
+      if (
+        borderTopLeftRadius ||
+        borderTopRightRadius ||
+        borderBottomLeftRadius ||
+        borderBottomRightRadius
+      ) {
+        ctx.beginPath();
+        if (borderTopLeftRadius) {
+          ctx.moveTo(left, top + borderTopLeftRadius);
+          ctx.quadraticCurveTo(left, top, left + borderTopLeftRadius, top);
+        } else {
+          ctx.moveTo(left, top);
+        }
+        if (borderTopRightRadius) {
+          ctx.lineTo(right - borderTopRightRadius, top);
+          ctx.quadraticCurveTo(right, top, right, top + borderTopRightRadius);
+        } else {
+          ctx.lineTo(right, top);
+        }
+        if (borderBottomRightRadius) {
+          ctx.lineTo(right, bottom - borderBottomRightRadius);
+          ctx.quadraticCurveTo(
+            right,
+            bottom,
+            right - borderBottomRightRadius,
+            bottom
+          );
+        } else {
+          ctx.lineTo(right, bottom);
+        }
+        if (borderBottomLeftRadius) {
+          ctx.lineTo(left + borderBottomLeftRadius, bottom);
+          ctx.quadraticCurveTo(
+            left,
+            bottom,
+            left,
+            bottom - borderBottomLeftRadius
+          );
+        } else {
+          ctx.lineTo(left, bottom);
+        }
+        if (borderTopLeftRadius) {
+          ctx.lineTo(left, top + borderTopLeftRadius);
+        } else {
+          ctx.lineTo(left, top);
+        }
+      } else {
+        ctx.beginPath();
+        ctx.rect(
+          this.node.getComputedLeft(),
+          this.node.getComputedTop(),
+          this.node.getComputedWidth(),
+          this.node.getComputedHeight()
+        );
+      }
+      if (this.style.backgroundColor) {
+        ctx.fillStyle = this.style.backgroundColor;
+        ctx.fill();
+      }
+      // TODO handle borderTop/Left/Right/Bottom override
+      if (this.style.borderColor) {
+        ctx.lineWidth = this.style.borderWidth || 1;
+        ctx.strokeStyle = this.style.borderColor;
+        ctx.stroke();
+      }
     }
 
-    if (this.style.borderTopColor || this.style.borderColor) {
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(this.node.getComputedWidth(), 0);
-      ctx.lineWidth = this.style.borderTopWidth || this.style.borderWidth || 0;
-      ctx.strokeStyle =
-        this.style.borderTopColor || this.style.borderColor || "";
-      ctx.stroke();
-    }
-    if (this.style.borderLeftColor || this.style.borderColor) {
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, this.node.getComputedHeight());
-      ctx.lineWidth = this.style.borderLeftWidth || this.style.borderWidth || 0;
-      ctx.strokeStyle =
-        this.style.borderLeftColor || this.style.borderColor || "";
-      ctx.stroke();
-    }
-    if (this.style.borderBottomColor || this.style.borderColor) {
-      ctx.beginPath();
-      ctx.moveTo(0, this.node.getComputedHeight());
-      ctx.lineTo(this.node.getComputedWidth(), this.node.getComputedHeight());
-      ctx.lineWidth =
-        this.style.borderBottomWidth || this.style.borderWidth || 0;
-      ctx.strokeStyle =
-        this.style.borderBottomColor || this.style.borderColor || "";
-      ctx.stroke();
-    }
-    if (this.style.borderRightColor || this.style.borderColor) {
-      ctx.beginPath();
-      ctx.moveTo(this.node.getComputedWidth(), 0);
-      ctx.lineTo(this.node.getComputedWidth(), this.node.getComputedHeight());
-      ctx.lineWidth =
-        this.style.borderRightWidth || this.style.borderWidth || 0;
-      ctx.strokeStyle =
-        this.style.borderRightColor || this.style.borderColor || "";
-      ctx.stroke();
-    }
+    // TODO handle borderTop/Left/Right/Bottom override
+    // if (this.style.borderTopColor || this.style.borderColor) {
+    //   ctx.beginPath();
+    //   ctx.moveTo(left, top);
+    //   ctx.lineTo(right, top);
+    //   ctx.lineWidth = this.style.borderTopWidth || this.style.borderWidth || 0;
+    //   ctx.strokeStyle =
+    //     this.style.borderTopColor || this.style.borderColor || "";
+    //   ctx.stroke();
+    // }
+    // if (this.style.borderLeftColor || this.style.borderColor) {
+    //   ctx.beginPath();
+    //   ctx.moveTo(left, top);
+    //   ctx.lineTo(left, bottom);
+    //   ctx.lineWidth = this.style.borderLeftWidth || this.style.borderWidth || 0;
+    //   ctx.strokeStyle =
+    //     this.style.borderLeftColor || this.style.borderColor || "";
+    //   ctx.stroke();
+    // }
+    // if (this.style.borderBottomColor || this.style.borderColor) {
+    //   ctx.beginPath();
+    //   ctx.moveTo(left, bottom);
+    //   ctx.lineTo(right, bottom);
+    //   ctx.lineWidth =
+    //     this.style.borderBottomWidth || this.style.borderWidth || 0;
+    //   ctx.strokeStyle =
+    //     this.style.borderBottomColor || this.style.borderColor || "";
+    //   ctx.stroke();
+    // }
+    // if (this.style.borderRightColor || this.style.borderColor) {
+    //   ctx.beginPath();
+    //   ctx.moveTo(right, top);
+    //   ctx.lineTo(right, bottom);
+    //   ctx.lineWidth =
+    //     this.style.borderRightWidth || this.style.borderWidth || 0;
+    //   ctx.strokeStyle =
+    //     this.style.borderRightColor || this.style.borderColor || "";
+    //   ctx.stroke();
+    // }
 
     this.renderContent(ctx);
 

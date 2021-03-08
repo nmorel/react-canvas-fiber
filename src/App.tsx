@@ -109,24 +109,42 @@ function Rectangle({ item }: { item: Item }) {
   return (
     <c-view
       style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
         width,
         height,
+        borderColor: "red",
+        borderWidth: 2,
         backgroundColor: "yellow",
         justifyContent: "center",
         transform: {
           matrix: [1, 0, 0, 1, left, top],
         },
         padding: 20,
-        borderRadius: 5,
+        borderRadius: 10,
       }}
     >
+      <c-view
+        style={{
+          backgroundColor: "green",
+          justifyContent: "center",
+          alignItems: "center",
+          position: "absolute",
+          right: 10,
+          top: 10,
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+        }}
+      />
       <c-view
         style={{
           flex: 1,
           backgroundColor: color,
           justifyContent: "center",
           alignItems: "center",
-          borderRadius: 5,
+          borderRadius: 10,
         }}
       >
         {item.kind === "image" ? (
