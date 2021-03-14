@@ -136,9 +136,9 @@ const alignContentToYoga: Record<
 
 export type ViewProps = ViewStyleProps;
 
-export class View<Props extends ViewProps> extends HasChildren {
+export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   node: YogaNode;
-  children: View<any>[];
+  children: View[];
   props: Props;
 
   constructor(props: Props) {
@@ -422,18 +422,18 @@ export class View<Props extends ViewProps> extends HasChildren {
 
   renderContent(ctx: CanvasRenderingContext2D) {}
 
-  addChild(child: View<any>) {
+  addChild(child: View) {
     super.addChild(child);
     this.node.insertChild(child.node, this.children.length - 1);
   }
 
-  insertChildBefore(child: View<any>, beforeChild: View<any>) {
+  insertChildBefore(child: View, beforeChild: View) {
     const index = super.insertChildBefore(child, beforeChild);
     this.node.insertChild(child.node, index);
     return index;
   }
 
-  removeChild(child: View<any>) {
+  removeChild(child: View) {
     super.removeChild(child);
     this.node.removeChild(child.node);
   }

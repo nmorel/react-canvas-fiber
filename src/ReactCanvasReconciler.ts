@@ -1,93 +1,68 @@
 import Reconciler from "react-reconciler";
-import {
-  unstable_now as now,
-  unstable_IdlePriority as idlePriority,
-  unstable_runWithPriority as run,
-} from "scheduler";
+import { unstable_now as now } from "scheduler";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { HasChildren } from "./HasChildren";
 import { Image, Text, View } from "./YogaComponents";
 
 const roots = new Map<CanvasRenderer, Reconciler.FiberRoot>();
-const emptyObject = {};
-const is = {
-  obj: (a: any) => a === Object(a) && !is.arr(a),
-  fun: (a: any) => typeof a === "function",
-  str: (a: any) => typeof a === "string",
-  num: (a: any) => typeof a === "number",
-  und: (a: any) => a === void 0,
-  arr: (a: any) => Array.isArray(a),
-  equ(a: any, b: any) {
-    // Wrong type or one of the two undefined, doesn't match
-    if (typeof a !== typeof b || !!a !== !!b) return false;
-    // Atomic, just compare a against b
-    if (is.str(a) || is.num(a) || is.obj(a)) return a === b;
-    // Array, shallow compare first to see if it's a match
-    if (is.arr(a) && a == b) return true;
-    // Last resort, go through keys
-    let i;
-    for (i in a) if (!(i in b)) return false;
-    for (i in b) if (a[i] !== b[i]) return false;
-    return is.und(i) ? a === b : true;
-  },
-};
 
-function appendChild(parentInstance: HasChildren | null, child: View<any>) {
+function appendChild(parentInstance: HasChildren, child: View) {
   parentInstance?.addChild(child);
 }
 
 function insertBefore(
-  parentInstance: HasChildren | null,
-  child: View<any>,
-  beforeChild: View<any>
+  parentInstance: HasChildren,
+  child: View,
+  beforeChild: View
 ) {
   parentInstance?.insertChildBefore(child, beforeChild);
 }
 
-function removeChild(parentInstance: HasChildren | null, child: View<any>) {
+function removeChild(parentInstance: HasChildren, child: View) {
   parentInstance?.removeChild(child);
 }
 
-let Renderer = Reconciler({
+type Props = JSX.IntrinsicElements["c-view"] & {
+  [key: string]: unknown;
+};
+
+let Renderer = Reconciler<
+  "c-view" | "c-text" | "c-image",
+  Props,
+  CanvasRenderer,
+  View,
+  undefined,
+  unknown,
+  undefined,
+  View | null | undefined,
+  undefined,
+  Partial<Props>,
+  unknown,
+  number | undefined,
+  number
+>({
   now,
-  createInstance(type, props, rootContainer, hostContext, internalHandle) {
+  createInstance(type, props) {
     switch (type) {
       case "c-view": {
-        // @ts-ignore
         return new View(props);
       }
       case "c-text": {
-        // @ts-ignore
-        return new Text(props);
+        return new Text(props as any);
       }
       case "c-image": {
-        // @ts-ignore
-        return new Image(props);
+        return new Image(props as any);
       }
       default:
-        return null;
+        throw new Error(`unknown type ${type}`);
     }
   },
 
-  prepareUpdate(
-    instance,
-    type,
-    oldProps,
-    newProps,
-    rootContainer,
-    hostContext
-  ) {
+  prepareUpdate(instance, type, oldProps, newProps) {
     return newProps;
   },
-  commitUpdate(
-    instance: any,
-    updatePayload: any,
-    type: string,
-    prevProps: any,
-    nextProps: any,
-    internalHandle: Reconciler.Fiber
-  ) {
-    instance.update(nextProps);
+  commitUpdate(instance, updatePayload) {
+    instance.update(updatePayload);
   },
 
   appendChild,
@@ -100,13 +75,15 @@ let Renderer = Reconciler({
   removeChild,
   removeChildFromContainer: removeChild,
 
-  hideInstance(instance) {
+  hideInstance() {
+    // TODO may have something to do here with suspense
     //   if (instance.isObject3D) {
     //     instance.visible = false
     //     invalidateInstance(instance)
     //   }
   },
-  unhideInstance(instance) {
+  unhideInstance() {
+    // TODO may have something to do here with suspense
     //   if ((instance.isObject3D && props.visible == null) || props.visible) {
     //     instance.visible = true
     //     invalidateInstance(instance)
@@ -136,33 +113,32 @@ let Renderer = Reconciler({
   getPublicInstance(instance) {
     return instance;
   },
-  getRootHostContext(rootContainer) {
-    return emptyObject;
+  getRootHostContext() {
+    return null;
   },
-  getChildHostContext(parentHostContext, type, rootContainer) {
-    return emptyObject;
+  getChildHostContext(parentHostContext) {
+    return parentHostContext;
   },
-  finalizeInitialChildren(instance, type, props, rootContainer, hostContext) {
+  finalizeInitialChildren() {
     return false;
   },
-  commitMount(instance, type, props, internalInstanceHandle) {
+  commitMount() {
     // https://github.com/facebook/react/issues/20271
     // This will make sure events are only added once to the central container
     // const container = instance.__container;
     // if (container && instance.raycast && instance.__handlers)
     //   container.__interaction.push(instance);
   },
-  prepareForCommit(container) {
+  prepareForCommit() {
     return null;
   },
-  preparePortalMount(container) {
+  preparePortalMount() {
     // noop
   },
   resetAfterCommit(container) {
-    // @ts-ignore
-    container?.draw();
+    container.draw();
   },
-  clearContainer(container) {
+  clearContainer() {
     // noop
   },
 
@@ -188,12 +164,10 @@ export function render(
 ) {
   let root = roots.get(canvasRenderer);
   if (!root) {
-    // @ts-ignore
     let newRoot = (root = Renderer.createContainer(
       canvasRenderer,
-      /*state !== undefined && state.current.concurrent ? 2 : */ 0,
+      0,
       false,
-      // @ts-ignore
       null
     ));
     roots.set(canvasRenderer, newRoot);
