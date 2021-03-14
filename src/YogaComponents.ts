@@ -44,10 +44,15 @@ import {
   DIRECTION_LTR,
 } from "yoga-layout-prebuilt";
 import { HasChildren } from "./HasChildren";
-import { DimensionValue, TextStyle, ViewStyle } from "./Style";
+import {
+  DimensionValue,
+  ImageStyleProps,
+  TextStyleProps,
+  ViewStyleProps,
+} from "./Style";
 
 const flexDirectionToYoga: Record<
-  Exclude<ViewStyle["flexDirection"], undefined>,
+  Exclude<ViewProps["flexDirection"], undefined>,
   YogaFlexDirection
 > = {
   row: FLEX_DIRECTION_ROW,
@@ -57,7 +62,7 @@ const flexDirectionToYoga: Record<
 };
 
 const flexWrapToYoga: Record<
-  Exclude<ViewStyle["flexWrap"], undefined>,
+  Exclude<ViewProps["flexWrap"], undefined>,
   YogaFlexWrap
 > = {
   wrap: WRAP_WRAP,
@@ -66,7 +71,7 @@ const flexWrapToYoga: Record<
 };
 
 const overflowToYoga: Record<
-  Exclude<ViewStyle["overflow"], undefined>,
+  Exclude<ViewProps["overflow"], undefined>,
   YogaOverflow
 > = {
   hidden: OVERFLOW_HIDDEN,
@@ -75,7 +80,7 @@ const overflowToYoga: Record<
 };
 
 const positionToYoga: Record<
-  Exclude<ViewStyle["position"], undefined>,
+  Exclude<ViewProps["position"], undefined>,
   YogaPositionType
 > = {
   relative: POSITION_TYPE_RELATIVE,
@@ -83,7 +88,7 @@ const positionToYoga: Record<
 };
 
 const justifyContentToYoga: Record<
-  Exclude<ViewStyle["justifyContent"], undefined>,
+  Exclude<ViewProps["justifyContent"], undefined>,
   YogaJustifyContent
 > = {
   "flex-start": JUSTIFY_FLEX_START,
@@ -95,7 +100,7 @@ const justifyContentToYoga: Record<
 };
 
 const alignItemsToYoga: Record<
-  Exclude<ViewStyle["alignItems"], undefined>,
+  Exclude<ViewProps["alignItems"], undefined>,
   YogaAlign
 > = {
   "flex-start": ALIGN_FLEX_START,
@@ -106,7 +111,7 @@ const alignItemsToYoga: Record<
 };
 
 const alignSelfToYoga: Record<
-  Exclude<ViewStyle["alignSelf"], undefined>,
+  Exclude<ViewProps["alignSelf"], undefined>,
   YogaAlign
 > = {
   auto: ALIGN_AUTO,
@@ -118,7 +123,7 @@ const alignSelfToYoga: Record<
 };
 
 const alignContentToYoga: Record<
-  Exclude<ViewStyle["alignContent"], undefined>,
+  Exclude<ViewProps["alignContent"], undefined>,
   YogaAlign
 > = {
   "flex-start": ALIGN_FLEX_START,
@@ -129,145 +134,147 @@ const alignContentToYoga: Record<
   "space-around": ALIGN_SPACE_AROUND,
 };
 
-export class View<Style extends ViewStyle> extends HasChildren {
+export type ViewProps = ViewStyleProps;
+
+export class View<Props extends ViewProps> extends HasChildren {
   node: YogaNode;
   children: View<any>[];
-  style: Style;
+  props: Props;
 
-  constructor({ style }: { style: Style }) {
+  constructor(props: Props) {
     super();
 
     this.node = Node.create();
     this.children = [];
-    this.style = style;
+    this.props = props;
 
     this.layout();
   }
 
-  update({ style }: { style: Style }) {
-    this.style = style;
+  update(props: Props) {
+    this.props = props;
     this.layout();
   }
 
   layout() {
-    if (this.style.display === "none") return;
+    if (this.props.display === "none") return;
 
     // Width
-    if (this.style.width != null) {
-      this.node.setWidth(this.style.width);
+    if (this.props.width != null) {
+      this.node.setWidth(this.props.width);
     }
-    if (this.style.maxWidth != null) {
-      this.node.setMaxWidth(this.style.maxWidth);
+    if (this.props.maxWidth != null) {
+      this.node.setMaxWidth(this.props.maxWidth);
     }
-    if (this.style.minWidth != null) {
-      this.node.setMinWidth(this.style.minWidth);
+    if (this.props.minWidth != null) {
+      this.node.setMinWidth(this.props.minWidth);
     }
 
     // Height
-    if (this.style.height != null) {
-      this.node.setHeight(this.style.height);
+    if (this.props.height != null) {
+      this.node.setHeight(this.props.height);
     }
-    if (this.style.maxHeight != null) {
-      this.node.setMaxHeight(this.style.maxHeight);
+    if (this.props.maxHeight != null) {
+      this.node.setMaxHeight(this.props.maxHeight);
     }
-    if (this.style.minHeight != null) {
-      this.node.setMinHeight(this.style.minHeight);
+    if (this.props.minHeight != null) {
+      this.node.setMinHeight(this.props.minHeight);
     }
 
     // Flex
-    if (this.style.flex != null) {
-      this.node.setFlex(this.style.flex);
+    if (this.props.flex != null) {
+      this.node.setFlex(this.props.flex);
     }
-    if (this.style.flexBasis != null) {
-      this.node.setFlexBasis(this.style.flexBasis);
+    if (this.props.flexBasis != null) {
+      this.node.setFlexBasis(this.props.flexBasis);
     }
-    if (this.style.flexDirection != null) {
-      this.node.setFlexDirection(flexDirectionToYoga[this.style.flexDirection]);
+    if (this.props.flexDirection != null) {
+      this.node.setFlexDirection(flexDirectionToYoga[this.props.flexDirection]);
     }
-    if (this.style.flexGrow != null) {
-      this.node.setFlexGrow(this.style.flexGrow);
+    if (this.props.flexGrow != null) {
+      this.node.setFlexGrow(this.props.flexGrow);
     }
-    if (this.style.flexShrink != null) {
-      this.node.setFlexShrink(this.style.flexShrink);
+    if (this.props.flexShrink != null) {
+      this.node.setFlexShrink(this.props.flexShrink);
     }
-    if (this.style.flexWrap != null) {
-      this.node.setFlexWrap(flexWrapToYoga[this.style.flexWrap]);
+    if (this.props.flexWrap != null) {
+      this.node.setFlexWrap(flexWrapToYoga[this.props.flexWrap]);
     }
 
     // Aspect Ratio
-    if (this.style.aspectRatio != null) {
-      this.node.setAspectRatio(this.style.aspectRatio);
+    if (this.props.aspectRatio != null) {
+      this.node.setAspectRatio(this.props.aspectRatio);
     }
 
     // Overflow
-    if (this.style.overflow != null) {
-      this.node.setOverflow(overflowToYoga[this.style.overflow]);
+    if (this.props.overflow != null) {
+      this.node.setOverflow(overflowToYoga[this.props.overflow]);
     }
 
     // Position
-    if (this.style.position != null) {
-      this.node.setPositionType(positionToYoga[this.style.position]);
+    if (this.props.position != null) {
+      this.node.setPositionType(positionToYoga[this.props.position]);
     }
-    if (this.style.left != null) {
-      this.node.setPosition(EDGE_LEFT, this.style.left);
+    if (this.props.left != null) {
+      this.node.setPosition(EDGE_LEFT, this.props.left);
     }
-    if (this.style.top != null) {
-      this.node.setPosition(EDGE_TOP, this.style.top);
+    if (this.props.top != null) {
+      this.node.setPosition(EDGE_TOP, this.props.top);
     }
-    if (this.style.right != null) {
-      this.node.setPosition(EDGE_RIGHT, this.style.right);
+    if (this.props.right != null) {
+      this.node.setPosition(EDGE_RIGHT, this.props.right);
     }
-    if (this.style.bottom != null) {
-      this.node.setPosition(EDGE_BOTTOM, this.style.bottom);
+    if (this.props.bottom != null) {
+      this.node.setPosition(EDGE_BOTTOM, this.props.bottom);
     }
 
     // Justify & Align
-    if (this.style.justifyContent != null) {
+    if (this.props.justifyContent != null) {
       this.node.setJustifyContent(
-        justifyContentToYoga[this.style.justifyContent]
+        justifyContentToYoga[this.props.justifyContent]
       );
     }
-    if (this.style.alignItems != null) {
-      this.node.setAlignItems(alignItemsToYoga[this.style.alignItems]);
+    if (this.props.alignItems != null) {
+      this.node.setAlignItems(alignItemsToYoga[this.props.alignItems]);
     }
-    if (this.style.alignSelf != null) {
-      this.node.setAlignSelf(alignSelfToYoga[this.style.alignSelf]);
+    if (this.props.alignSelf != null) {
+      this.node.setAlignSelf(alignSelfToYoga[this.props.alignSelf]);
     }
-    if (this.style.alignContent != null) {
-      this.node.setAlignContent(alignContentToYoga[this.style.alignContent]);
+    if (this.props.alignContent != null) {
+      this.node.setAlignContent(alignContentToYoga[this.props.alignContent]);
     }
 
     // Padding
-    if (this.style.padding != null) {
-      this.node.setPadding(EDGE_ALL, this.style.padding);
+    if (this.props.padding != null) {
+      this.node.setPadding(EDGE_ALL, this.props.padding);
     }
-    if (this.style.paddingBottom != null) {
-      this.node.setPadding(EDGE_BOTTOM, this.style.paddingBottom);
+    if (this.props.paddingBottom != null) {
+      this.node.setPadding(EDGE_BOTTOM, this.props.paddingBottom);
     }
-    if (this.style.paddingHorizontal != null) {
-      this.node.setPadding(EDGE_HORIZONTAL, this.style.paddingHorizontal);
+    if (this.props.paddingHorizontal != null) {
+      this.node.setPadding(EDGE_HORIZONTAL, this.props.paddingHorizontal);
     }
-    if (this.style.paddingLeft != null) {
-      this.node.setPadding(EDGE_LEFT, this.style.paddingLeft);
+    if (this.props.paddingLeft != null) {
+      this.node.setPadding(EDGE_LEFT, this.props.paddingLeft);
     }
-    if (this.style.paddingRight != null) {
-      this.node.setPadding(EDGE_RIGHT, this.style.paddingRight);
+    if (this.props.paddingRight != null) {
+      this.node.setPadding(EDGE_RIGHT, this.props.paddingRight);
     }
-    if (this.style.paddingTop != null) {
-      this.node.setPadding(EDGE_TOP, this.style.paddingTop);
+    if (this.props.paddingTop != null) {
+      this.node.setPadding(EDGE_TOP, this.props.paddingTop);
     }
-    if (this.style.paddingVertical != null) {
-      this.node.setPadding(EDGE_VERTICAL, this.style.paddingVertical);
+    if (this.props.paddingVertical != null) {
+      this.node.setPadding(EDGE_VERTICAL, this.props.paddingVertical);
     }
 
     // Margin
-    this.setMargin(EDGE_ALL, this.style.margin);
-    this.setMargin(EDGE_BOTTOM, this.style.marginBottom);
-    this.setMargin(EDGE_HORIZONTAL, this.style.marginHorizontal);
-    this.setMargin(EDGE_LEFT, this.style.marginLeft);
-    this.setMargin(EDGE_RIGHT, this.style.marginRight);
-    this.setMargin(EDGE_TOP, this.style.marginTop);
-    this.setMargin(EDGE_VERTICAL, this.style.marginVertical);
+    this.setMargin(EDGE_ALL, this.props.margin);
+    this.setMargin(EDGE_BOTTOM, this.props.marginBottom);
+    this.setMargin(EDGE_HORIZONTAL, this.props.marginHorizontal);
+    this.setMargin(EDGE_LEFT, this.props.marginLeft);
+    this.setMargin(EDGE_RIGHT, this.props.marginRight);
+    this.setMargin(EDGE_TOP, this.props.marginTop);
+    this.setMargin(EDGE_VERTICAL, this.props.marginVertical);
   }
 
   setMargin(edge: YogaEdge, margin: DimensionValue | null | undefined) {
@@ -294,7 +301,7 @@ export class View<Style extends ViewStyle> extends HasChildren {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    if (this.style.display === "none") return;
+    if (this.props.display === "none") return;
 
     if (this.node.isDirty()) {
       this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
@@ -302,48 +309,29 @@ export class View<Style extends ViewStyle> extends HasChildren {
 
     ctx.save();
 
-    if (this.style.transform) {
-      ctx.transform(
-        this.style.transform.scaleX ??
-          this.style.transform.scale ??
-          this.style.transform.matrix?.[0] ??
-          1,
-        this.style.transform.skewX ?? this.style.transform.matrix?.[1] ?? 0,
-        this.style.transform.skewY ?? this.style.transform.matrix?.[2] ?? 0,
-        this.style.transform.scaleY ??
-          this.style.transform.scale ??
-          this.style.transform.matrix?.[3] ??
-          0,
-        this.style.transform.translateX ??
-          this.style.transform.translate?.[0] ??
-          this.style.transform.matrix?.[4] ??
-          0,
-        this.style.transform.translateY ??
-          this.style.transform.translate?.[1] ??
-          this.style.transform.matrix?.[5] ??
-          0
-      );
+    if (this.props.transformMatrix) {
+      ctx.transform(...this.props.transformMatrix);
     }
 
-    if (this.style.opacity != null) {
-      ctx.globalAlpha = this.style.opacity;
+    if (this.props.opacity != null) {
+      ctx.globalAlpha = this.props.opacity;
     }
 
     const borderTopLeftRadius =
-      this.style.borderTopLeftRadius || this.style.borderRadius;
+      this.props.borderTopLeftRadius || this.props.borderRadius;
     const borderTopRightRadius =
-      this.style.borderTopRightRadius || this.style.borderRadius;
+      this.props.borderTopRightRadius || this.props.borderRadius;
     const borderBottomLeftRadius =
-      this.style.borderBottomLeftRadius || this.style.borderRadius;
+      this.props.borderBottomLeftRadius || this.props.borderRadius;
     const borderBottomRightRadius =
-      this.style.borderBottomRightRadius || this.style.borderRadius;
+      this.props.borderBottomRightRadius || this.props.borderRadius;
 
     const top = this.node.getComputedTop();
     const left = this.node.getComputedLeft();
     const right = left + this.node.getComputedWidth();
     const bottom = top + this.node.getComputedHeight();
 
-    if (this.style.backgroundColor || this.style.borderColor) {
+    if (this.props.backgroundColor || this.props.borderColor) {
       if (
         borderTopLeftRadius ||
         borderTopRightRadius ||
@@ -399,57 +387,16 @@ export class View<Style extends ViewStyle> extends HasChildren {
           this.node.getComputedHeight()
         );
       }
-      if (this.style.backgroundColor) {
-        ctx.fillStyle = this.style.backgroundColor;
+      if (this.props.backgroundColor) {
+        ctx.fillStyle = this.props.backgroundColor;
         ctx.fill();
       }
-      // TODO handle borderTop/Left/Right/Bottom override
-      if (this.style.borderColor) {
-        ctx.lineWidth = this.style.borderWidth || 1;
-        ctx.strokeStyle = this.style.borderColor;
+      if (this.props.borderColor) {
+        ctx.lineWidth = this.props.borderWidth || 1;
+        ctx.strokeStyle = this.props.borderColor;
         ctx.stroke();
       }
     }
-
-    // TODO handle borderTop/Left/Right/Bottom override
-    // if (this.style.borderTopColor || this.style.borderColor) {
-    //   ctx.beginPath();
-    //   ctx.moveTo(left, top);
-    //   ctx.lineTo(right, top);
-    //   ctx.lineWidth = this.style.borderTopWidth || this.style.borderWidth || 0;
-    //   ctx.strokeStyle =
-    //     this.style.borderTopColor || this.style.borderColor || "";
-    //   ctx.stroke();
-    // }
-    // if (this.style.borderLeftColor || this.style.borderColor) {
-    //   ctx.beginPath();
-    //   ctx.moveTo(left, top);
-    //   ctx.lineTo(left, bottom);
-    //   ctx.lineWidth = this.style.borderLeftWidth || this.style.borderWidth || 0;
-    //   ctx.strokeStyle =
-    //     this.style.borderLeftColor || this.style.borderColor || "";
-    //   ctx.stroke();
-    // }
-    // if (this.style.borderBottomColor || this.style.borderColor) {
-    //   ctx.beginPath();
-    //   ctx.moveTo(left, bottom);
-    //   ctx.lineTo(right, bottom);
-    //   ctx.lineWidth =
-    //     this.style.borderBottomWidth || this.style.borderWidth || 0;
-    //   ctx.strokeStyle =
-    //     this.style.borderBottomColor || this.style.borderColor || "";
-    //   ctx.stroke();
-    // }
-    // if (this.style.borderRightColor || this.style.borderColor) {
-    //   ctx.beginPath();
-    //   ctx.moveTo(right, top);
-    //   ctx.lineTo(right, bottom);
-    //   ctx.lineWidth =
-    //     this.style.borderRightWidth || this.style.borderWidth || 0;
-    //   ctx.strokeStyle =
-    //     this.style.borderRightColor || this.style.borderColor || "";
-    //   ctx.stroke();
-    // }
 
     this.renderContent(ctx);
 
@@ -492,69 +439,51 @@ export class View<Style extends ViewStyle> extends HasChildren {
   }
 }
 
-export class Text extends View<TextStyle> {
+export type TextProps = TextStyleProps & {
   text: string;
+};
 
-  constructor({ text, ...props }: { text: string; style: TextStyle }) {
+export class Text extends View<TextProps> {
+  constructor(props: TextProps) {
     super(props);
-    this.text = text;
     this.node.setMeasureFunc(() => {
       // TODO add real measurement
       const canvas = new OffscreenCanvas(1000, 1000);
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.font = `${this.style.fontSize ?? 16}px sans-serif`;
+        ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
       }
-      const metrics = ctx?.measureText(text);
+      const metrics = ctx?.measureText(this.props.text);
       return {
         width: metrics?.width || 0,
-        height: props.style.fontSize ?? 16,
+        height: this.props.fontSize ?? 16,
       };
     });
   }
 
-  update(props: { style: TextStyle; text: string }) {
-    this.text = props.text;
-    super.update(props);
-  }
-
   renderContent(ctx: CanvasRenderingContext2D) {
     ctx.textBaseline = "top";
-    ctx.fillStyle = this.style.color ?? "black";
-    ctx.font = `${this.style.fontSize ?? 16}px sans-serif`;
+    ctx.fillStyle = this.props.color ?? "black";
+    ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
     ctx.fillText(
-      this.text,
+      this.props.text,
       this.node.getComputedLeft(),
       this.node.getComputedTop()
     );
   }
 }
 
-export class Image extends View<ViewStyle> {
+export type ImageProps = ImageStyleProps & {
   image: HTMLImageElement;
+};
 
-  constructor({
-    image,
-    ...props
-  }: {
-    image: HTMLImageElement;
-    style: ViewStyle;
-  }) {
-    super(props);
-    this.image = image;
-  }
-
-  update(props: { style: TextStyle; image: HTMLImageElement }) {
-    this.image = props.image;
-    super.update(props);
-  }
-
+export class Image extends View<ImageProps> {
   renderContent(ctx: CanvasRenderingContext2D) {
     const cw = this.node.getComputedWidth();
     const ch = this.node.getComputedHeight();
     const ratioContainer = cw / ch;
-    const iw = this.image.width;
-    const ih = this.image.height;
+    const iw = this.props.image.width;
+    const ih = this.props.image.height;
     const ratioImg = iw / ih;
     let dw: number;
     let dh: number;
@@ -567,7 +496,7 @@ export class Image extends View<ViewStyle> {
     }
 
     ctx.drawImage(
-      this.image,
+      this.props.image,
       this.node.getComputedLeft() + (cw - dw) / 2,
       this.node.getComputedTop() + (ch - dh) / 2,
       dw,

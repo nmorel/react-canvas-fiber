@@ -49,16 +49,18 @@ export function App() {
   React.useLayoutEffect(() => {
     const element = refContainer.current;
     if (!element) return;
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (!Array.isArray(entries) || !entries.length) {
-        return;
+    const resizeObserver = new ResizeObserver(
+      (entries: ResizeObserverEntry[]) => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        setSize({
+          width: Math.floor(entry.contentRect.width),
+          height: Math.floor(entry.contentRect.height),
+        });
       }
-      const entry = entries[0];
-      setSize({
-        width: Math.floor(entry.contentRect.width),
-        height: Math.floor(entry.contentRect.height),
-      });
-    });
+    );
     resizeObserver.observe(element);
     return () => {
       resizeObserver.unobserve(element);
@@ -108,70 +110,61 @@ function Rectangle({ item }: { item: Item }) {
   const { width, height, left, top, color } = item;
   return (
     <c-view
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width,
-        height,
-        borderColor: "red",
-        borderWidth: 2,
-        backgroundColor: "yellow",
-        justifyContent: "center",
-        transform: {
-          matrix: [1, 0, 0, 1, left, top],
-        },
-        padding: 20,
-        borderRadius: 10,
-      }}
+      position="absolute"
+      top={0}
+      left={0}
+      width={width}
+      height={height}
+      borderColor="red"
+      borderWidth={2}
+      backgroundColor="yellow"
+      justifyContent="center"
+      transformMatrix={[1, 0, 0, 1, left, top]}
+      padding={20}
+      borderRadius={10}
     >
       <c-view
-        style={{
-          backgroundColor: "green",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "absolute",
-          right: 10,
-          top: 10,
-          width: 10,
-          height: 10,
-          borderRadius: 5,
-        }}
+        backgroundColor="green"
+        justifyContent="center"
+        alignItems="center"
+        position="absolute"
+        right={10}
+        top={10}
+        width={10}
+        height={10}
+        borderRadius={5}
       />
       <c-view
-        style={{
-          flex: 1,
-          backgroundColor: color,
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: 10,
-        }}
+        flex={1}
+        backgroundColor={color}
+        justifyContent="center"
+        alignItems="center"
+        borderRadius={10}
       >
         {item.kind === "image" ? (
           <React.Suspense
             fallback={
               <React.Suspense fallback={null}>
                 <Image
-                  imageUrl={item.placeholderUrl}
-                  style={{ flex: 1, width: "100%", height: "100%" }}
+                  src={item.placeholderUrl}
+                  flex={1}
+                  width="100%"
+                  height="100%"
                 />
               </React.Suspense>
             }
           >
-            <Image
-              imageUrl={item.imageUrl}
-              style={{ flex: 1, width: "100%", height: "100%" }}
-            />
+            <Image src={item.imageUrl} flex={1} width="100%" height="100%" />
           </React.Suspense>
         ) : (
-          <c-text text={item.text} style={{ color: "white", fontSize: 32 }} />
+          <c-text text={item.text} color="white" fontSize={32} />
         )}
       </c-view>
     </c-view>
   );
 }
 
-const imageAsset = createAsset((imageUrl: string) => {
+const imageAsset = createAsset((src: string) => {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new window.Image();
     image.onload = () => {
@@ -184,14 +177,14 @@ const imageAsset = createAsset((imageUrl: string) => {
       image.onerror = null;
       reject();
     };
-    image.src = imageUrl;
+    image.src = src;
   });
 });
 
 function Image({
-  imageUrl,
+  src,
   ...props
-}: Omit<JSX.IntrinsicElements["c-image"], "image"> & { imageUrl: string }) {
-  const image = imageAsset.read(imageUrl);
+}: Omit<JSX.IntrinsicElements["c-image"], "image"> & { src: string }) {
+  const image = imageAsset.read(src);
   return <c-image image={image} {...props} />;
 }

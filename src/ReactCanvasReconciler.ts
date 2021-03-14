@@ -50,17 +50,7 @@ function removeChild(parentInstance: HasChildren | null, child: View<any>) {
 
 let Renderer = Reconciler({
   now,
-  createInstance(
-    type,
-    {
-      /* filter out children, will be added through appendChild */
-      children,
-      ...props
-    },
-    rootContainer,
-    hostContext,
-    internalHandle
-  ) {
+  createInstance(type, props, rootContainer, hostContext, internalHandle) {
     switch (type) {
       case "c-view": {
         // @ts-ignore

@@ -1,21 +1,16 @@
 import { ReactNode } from "react";
-import { ImageStyle, TextStyle, ViewStyle } from "./Style";
+import { ViewProps, TextProps, ImageProps } from "./YogaComponents";
 
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      "c-view": {
-        style?: ViewStyle;
+      "c-view": ViewProps & {
         children?: ReactNode;
       };
-      "c-text": {
-        text: string;
-        style?: TextStyle;
+      "c-text": TextProps & {
         children?: ReactNode;
       };
-      "c-image": {
-        image: HTMLImageElement;
-        style?: ImageStyle;
+      "c-image": ImageProps & {
         children?: ReactNode;
       };
     }

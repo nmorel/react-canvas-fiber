@@ -3,18 +3,11 @@ export type PointValue = {
   y: number;
 };
 
-export type EdgeInsetsValue = {
-  top: number;
-  left: number;
-  right: number;
-  bottom: number;
-};
-
 export type DimensionValue = number | string;
 
 type ColorValue = string;
 
-type BaseStyle = {
+type LayoutProps = {
   /** `display` sets the display type of this component.
    *
    *  It works similarly to `display` in CSS, but only support 'flex' and 'none'.
@@ -380,7 +373,7 @@ type BaseStyle = {
   direction?: "inherit" | "ltr" | "rtl";
 };
 
-type Transform = {
+type TransformProps = {
   /**
    * `transform` accepts an array of transformation objects. Each object specifies
    * the property that will be transformed as the key, and the value to use in the
@@ -397,17 +390,14 @@ type Transform = {
    *
    * `transform([{ skewX: '45deg' }])`
    */
-  transform?: {
-    scale?: number;
-    scaleX?: number;
-    scaleY?: number;
-    translateX?: number;
-    translateY?: number;
-    translate?: [number, number];
-    skewX?: number;
-    skewY?: number;
-    matrix?: Array<number>;
-  };
+  transformMatrix?: [
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    tx: number,
+    ty: number
+  ];
 };
 
 /**
@@ -420,7 +410,7 @@ type Transform = {
  * To add a drop shadow to a view use the [`elevation` property](docs/viewstyleproptypes.html#elevation) (Android 5.0+).
  * To customize the color use the [`shadowColor` property](docs/shadow-props.html#shadowColor) (Android 9.0+).
  */
-export type Shadow = {
+export type ShadowProps = {
   /**
    * Sets the drop shadow color
    * @platform ios
@@ -449,15 +439,15 @@ export type Shadow = {
   shadowRadius?: number;
 };
 
-export type ViewStyle = BaseStyle &
-  Transform &
-  Shadow & {
+export type ViewStyleProps = LayoutProps &
+  TransformProps &
+  ShadowProps & {
     backgroundColor?: ColorValue;
     borderColor?: ColorValue;
-    borderBottomColor?: ColorValue;
-    borderLeftColor?: ColorValue;
-    borderRightColor?: ColorValue;
-    borderTopColor?: ColorValue;
+    // borderBottomColor?: ColorValue;
+    // borderLeftColor?: ColorValue;
+    // borderRightColor?: ColorValue;
+    // borderTopColor?: ColorValue;
     borderRadius?: number;
     borderBottomLeftRadius?: number;
     borderBottomRightRadius?: number;
@@ -465,10 +455,10 @@ export type ViewStyle = BaseStyle &
     borderTopRightRadius?: number;
     borderStyle?: "solid" | "dotted" | "dashed";
     borderWidth?: number;
-    borderBottomWidth?: number;
-    borderLeftWidth?: number;
-    borderRightWidth?: number;
-    borderTopWidth?: number;
+    // borderBottomWidth?: number;
+    // borderLeftWidth?: number;
+    // borderRightWidth?: number;
+    // borderTopWidth?: number;
     opacity?: number;
   };
 
@@ -485,7 +475,7 @@ export type FontWeight =
   | "800"
   | "900";
 
-export type TextStyle = ViewStyle & {
+export type TextStyleProps = ViewStyleProps & {
   color?: ColorValue;
   fontFamily?: string;
   fontSize?: number;
@@ -520,7 +510,7 @@ export type TextStyle = ViewStyle & {
   writingDirection?: "auto" | "ltr" | "rtl";
 };
 
-export type ImageStyle = ViewStyle & {
+export type ImageStyleProps = ViewStyleProps & {
   resizeMode?: "contain" | "cover" | "stretch" | "center" | "repeat";
   tintColor?: ColorValue;
   overlayColor?: string;
