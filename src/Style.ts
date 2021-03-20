@@ -8,13 +8,6 @@ export type DimensionValue = number | string;
 type ColorValue = string;
 
 type LayoutProps = {
-  /** `display` sets the display type of this component.
-   *
-   *  It works similarly to `display` in CSS, but only support 'flex' and 'none'.
-   *  'flex' is the default.
-   */
-  display?: "none" | "flex";
-
   /** `width` sets the width of this component.
    *
    *  It works similarly to `width` in CSS, but in React Native you

@@ -157,8 +157,6 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   }
 
   layout() {
-    if (this.props.display === "none") return;
-
     // Width
     if (this.props.width != null) {
       this.node.setWidth(this.props.width);
@@ -301,8 +299,6 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    if (this.props.display === "none") return;
-
     if (this.node.isDirty()) {
       this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
     }
@@ -446,19 +442,29 @@ export type TextProps = TextStyleProps & {
 export class Text extends View<TextProps> {
   constructor(props: TextProps) {
     super(props);
-    this.node.setMeasureFunc(() => {
-      // TODO add real measurement
-      const canvas = new OffscreenCanvas(1000, 1000);
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
+    this.node.setMeasureFunc(
+      (width, widthMeasureMode, height, heightMeasureMode) => {
+        // TODO add real measurement
+        const canvas = new OffscreenCanvas(1000, 1000);
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
+        }
+        const metrics = ctx?.measureText(this.props.text);
+        return {
+          width: metrics?.width || 0,
+          height: this.props.fontSize ?? 16,
+        };
       }
-      const metrics = ctx?.measureText(this.props.text);
-      return {
-        width: metrics?.width || 0,
-        height: this.props.fontSize ?? 16,
-      };
-    });
+    );
+  }
+
+  update(props: TextProps) {
+    const prevProps = this.props;
+    super.update(props);
+    if (prevProps.text !== this.props.text) {
+      this.node.markDirty();
+    }
   }
 
   renderContent(ctx: CanvasRenderingContext2D) {

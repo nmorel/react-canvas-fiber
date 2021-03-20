@@ -12,6 +12,7 @@ const itemText1 = {
   top: 50,
   width: 300,
   height: 180,
+  scale: 1,
   color: "green",
   text: "Hello",
 };
@@ -20,9 +21,10 @@ const itemText2 = {
   id: "2",
   kind: "text" as const,
   left: 40,
-  top: 240,
+  top: 260,
   width: 300,
   height: 180,
+  scale: 0.8,
   color: "red",
   text: "World",
 };
@@ -34,6 +36,7 @@ const itemImage1 = {
   top: 450,
   width: 300,
   height: 180,
+  scale: 1.5,
   color: "red",
   placeholderUrl: largeImagePlaceholder,
   imageUrl: largeImage,
@@ -107,7 +110,7 @@ export function App() {
 }
 
 function Rectangle({ item }: { item: Item }) {
-  const { width, height, left, top, color } = item;
+  const { width, height, left, top, color, scale } = item;
   return (
     <c-view
       position="absolute"
@@ -119,7 +122,7 @@ function Rectangle({ item }: { item: Item }) {
       borderWidth={2}
       backgroundColor="yellow"
       justifyContent="center"
-      transformMatrix={[1, 0, 0, 1, left, top]}
+      transformMatrix={[scale, 0, 0, scale, left, top]}
       padding={20}
       borderRadius={10}
     >
@@ -133,6 +136,10 @@ function Rectangle({ item }: { item: Item }) {
         width={10}
         height={10}
         borderRadius={5}
+        onPointerDown={(evt) => {
+          evt.stopPropagation();
+          console.log("down !", evt);
+        }}
       />
       <c-view
         flex={1}
