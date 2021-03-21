@@ -43,6 +43,7 @@ import {
   YogaEdge,
   DIRECTION_LTR,
 } from "yoga-layout-prebuilt";
+import { CanvasRenderer } from "./CanvasRenderer";
 import { HasChildren } from "./HasChildren";
 import {
   DimensionValue,
@@ -137,12 +138,14 @@ const alignContentToYoga: Record<
 export type ViewProps = ViewStyleProps & RCF.Handlers;
 
 export class View<Props extends ViewProps = ViewProps> extends HasChildren {
+  container: CanvasRenderer;
   node: YogaNode;
   children: View[];
   props: Props;
 
-  constructor(props: Props) {
+  constructor(props: Props, container: CanvasRenderer) {
     super();
+    this.container = container;
 
     this.node = Node.create();
     this.children = [];
@@ -433,6 +436,10 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     super.removeChild(child);
     this.node.removeChild(child.node);
   }
+
+  destroy() {
+    // noop
+  }
 }
 
 export type TextProps = TextStyleProps &
@@ -441,8 +448,8 @@ export type TextProps = TextStyleProps &
   };
 
 export class Text extends View<TextProps> {
-  constructor(props: TextProps) {
-    super(props);
+  constructor(props: TextProps, container: CanvasRenderer) {
+    super(props, container);
     this.node.setMeasureFunc(
       (width, widthMeasureMode, height, heightMeasureMode) => {
         // TODO add real measurement

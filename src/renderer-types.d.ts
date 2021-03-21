@@ -19,60 +19,75 @@ type CanvasElement<T extends View> = {
 
 declare global {
   namespace RCF {
-    type PointerEvent<T extends View = View> = {
-      nativeEvent: globalThis.PointerEvent;
+    type Event<
+      NativeEvent extends
+        | globalThis.MouseEvent
+        | globalThis.PointerEvent
+        | globalThis.WheelEvent,
+      T extends View = View
+    > = Omit<
+      NativeEvent,
+      | "target"
+      | "currentTarget"
+      | "eventPhase"
+      | "timeStamp"
+      | "defaultPrevented"
+      | "preventDefault"
+      | "stopPropagation"
+    > & {
+      nativeEvent: NativeEvent;
       target: T;
       currentTarget: T;
-      bubbles: boolean;
-      cancelable: boolean;
-      eventPhase: 0 | 1 | 2 | 3;
-      isTrusted: boolean;
+
+      eventPhase: number;
+
       defaultPrevented: boolean;
       preventDefault(): void;
+
       isPropagationStopped: boolean;
       stopPropagation(): void;
-      timeStamp: number;
-      type: string;
-      altKey: boolean;
-      button: number;
-      buttons: number;
-      clientX: number;
-      clientY: number;
-      ctrlKey: boolean;
-      metaKey: boolean;
-      movementX: number;
-      movementY: number;
-      pageX: number;
-      pageY: number;
-      screenX: number;
-      screenY: number;
-      shiftKey: boolean;
-      pointerId: number;
-      pressure: number;
-      tangentialPressure: number;
-      tiltX: number;
-      tiltY: number;
-      twist: number;
-      width: number;
-      height: number;
-      pointerType: "mouse" | "pen" | "touch";
-      isPrimary: boolean;
+
+      timestamp: number;
 
       canvasX: number;
       canvasY: number;
     };
-    type EventType =
+    type PointerEvent<T extends View = View> = Event<
+      globalThis.PointerEvent,
+      T
+    >;
+    type MouseEvent<T extends View = View> = Event<globalThis.MouseEvent, T>;
+    type WheelEvent<T extends View = View> = Event<globalThis.WheelEvent, T>;
+
+    type PointerEventType =
       | "onPointerDown"
       | "onPointerMove"
       | "onPointerUp"
-      | "onTap"
-      | "onDoubleTap";
-    type HandlerNames = EventType | `${EventType}Capture`;
+      | "onPointerOver";
+    type MouseEventType = "onTap" | "onDoubleTap";
+    type WheelEventType = "onWheel";
+    type EventType = PointerEventType | MouseEventType | WheelEventType;
     type Handlers = {
-      [Event in HandlerNames as `${Event}`]?: <T extends View = View>(
+      [Event in
+        | PointerEventType
+        | `${PointerEventType}Capture` as `${Event}`]?: <T extends View = View>(
         evt: RCF.PointerEvent<T>
       ) => void;
-    };
+    } &
+      {
+        [Event in MouseEventType | `${MouseEventType}Capture` as `${Event}`]?: <
+          T extends View = View
+        >(
+          evt: RCF.MouseEvent<T>
+        ) => void;
+      } &
+      {
+        [Event in WheelEventType | `${WheelEventType}Capture` as `${Event}`]?: <
+          T extends View = View
+        >(
+          evt: RCF.WheelEvent<T>
+        ) => void;
+      };
   }
   namespace JSX {
     interface IntrinsicElements {

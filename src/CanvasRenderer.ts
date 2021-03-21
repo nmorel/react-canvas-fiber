@@ -8,6 +8,11 @@ export class CanvasRenderer extends HasChildren {
   containerHeight = 0;
   scaleRatio = 1;
 
+  private lastClickEvents: Map<
+    View,
+    { detail: number; timestamp: number }
+  > = new Map();
+
   constructor(
     canvas: HTMLCanvasElement,
     options: { width: number; height: number }
@@ -61,8 +66,20 @@ export class CanvasRenderer extends HasChildren {
     this._handleEvent(evt, "onPointerMove");
   };
 
+  _onPointerOver = (evt: PointerEvent) => {
+    this._handleEvent(evt, "onPointerOver");
+  };
+
   _onPointerUp = (evt: PointerEvent) => {
     this._handleEvent(evt, "onPointerUp");
+  };
+
+  _onClick = (evt: MouseEvent) => {
+    this._handleEvent(evt, "onTap");
+  };
+
+  _onWheel = (evt: WheelEvent) => {
+    this._handleEvent(evt, "onWheel");
   };
 
   _addOrRemoveListeners(add: boolean) {
@@ -72,9 +89,18 @@ export class CanvasRenderer extends HasChildren {
     fn("pointerdown", this._onPointerDown);
     fn("pointermove", this._onPointerMove);
     fn("pointerup", this._onPointerUp);
+    fn("pointerover", this._onPointerOver);
+    fn("wheel", this._onWheel);
+    fn("click", this._onClick);
   }
 
-  _handleEvent(evt: PointerEvent, eventName: RCF.EventType) {
+  _handleEvent(evt: MouseEvent, eventName: RCF.MouseEventType): void;
+  _handleEvent(evt: PointerEvent, eventName: RCF.PointerEventType): void;
+  _handleEvent(evt: WheelEvent, eventName: RCF.WheelEventType): void;
+  _handleEvent<Event extends MouseEvent | PointerEvent | WheelEvent>(
+    evt: Event,
+    eventName: RCF.EventType
+  ): void {
     const { left, top } = this.canvas.getBoundingClientRect();
     const pointer = {
       x: evt.clientX - left,
@@ -92,14 +118,24 @@ export class CanvasRenderer extends HasChildren {
 
     const target = targets[targets.length - 1];
 
-    const customEvent: RCF.PointerEvent = {
+    let {
+      target: nativeTarget,
+      currentTarget,
+      eventPhase,
+      defaultPrevented,
+      preventDefault,
+      stopPropagation,
+      timeStamp,
+      ...evtProps
+    } = evt;
+
+    const customEvent: RCF.Event<Event, View> = {
+      ...evtProps,
+      timestamp: performance.now(),
       nativeEvent: evt,
       target,
       currentTarget: target,
-      bubbles: true,
-      cancelable: evt.cancelable,
       eventPhase: 0,
-      isTrusted: evt.isTrusted,
       get defaultPrevented() {
         return evt.defaultPrevented;
       },
@@ -110,43 +146,58 @@ export class CanvasRenderer extends HasChildren {
       stopPropagation() {
         this.isPropagationStopped = true;
       },
-      timeStamp: evt.timeStamp,
-      type: evt.type,
-      altKey: evt.altKey,
-      button: evt.button,
-      buttons: evt.buttons,
-      clientX: evt.clientX,
-      clientY: evt.clientY,
-      ctrlKey: evt.ctrlKey,
-      metaKey: evt.metaKey,
-      movementX: evt.movementX,
-      movementY: evt.movementY,
-      pageX: evt.pageX,
-      pageY: evt.pageY,
-      screenX: evt.screenX,
-      screenY: evt.screenY,
-      shiftKey: evt.shiftKey,
-      pointerId: evt.pointerId,
-      pressure: evt.pressure,
-      tangentialPressure: evt.tangentialPressure,
-      tiltX: evt.tiltX,
-      tiltY: evt.tiltY,
-      twist: evt.twist,
-      width: evt.width,
-      height: evt.height,
-      pointerType: evt.pointerType as any,
-      isPrimary: evt.isPrimary,
       canvasX: pointer.x,
       canvasY: pointer.y,
     };
 
+    let doubleTapTargets: View[] | undefined;
+    if (eventName === "onTap") {
+      doubleTapTargets = [];
+      for (const target of targets) {
+        let entry = this.lastClickEvents.get(target);
+        if (!entry) {
+          entry = {
+            detail: 0,
+            timestamp: 0,
+          };
+          this.lastClickEvents.set(target, entry);
+        } else if (customEvent.timestamp - entry.timestamp > 400) {
+          entry.detail = 0;
+        }
+        entry.detail++;
+        entry.timestamp = customEvent.timestamp;
+        if (entry.detail === 2) {
+          doubleTapTargets.push(target);
+        }
+      }
+    }
+
+    this._callHandlers(targets, customEvent, eventName);
+
+    if (doubleTapTargets?.length) {
+      this._callHandlers(doubleTapTargets, customEvent, "onDoubleTap");
+    }
+  }
+
+  _callHandlers(
+    targets: View[],
+    customEvent: RCF.Event<any, any>,
+    eventName: RCF.EventType
+  ) {
     // Capture phase
+    customEvent.eventPhase = 1;
     for (const view of targets) {
-      const handler = view.props[`${eventName}Capture` as const];
+      const handler = view.props[`${eventName}Capture` as const] as (
+        evt: typeof customEvent
+      ) => void | undefined;
       if (handler) {
         customEvent.currentTarget = view;
-        customEvent.eventPhase =
-          customEvent.currentTarget === customEvent.target ? 2 : 1;
+        customEvent.detail =
+          eventName === "onTap"
+            ? this.lastClickEvents.get(view)?.detail || 1
+            : eventName === "onDoubleTap"
+            ? 2
+            : 0;
         handler(customEvent);
         if (customEvent.isPropagationStopped) {
           break;
@@ -157,13 +208,20 @@ export class CanvasRenderer extends HasChildren {
       return;
     }
     // Bubbling phase
+    customEvent.eventPhase = 3;
     for (let i = targets.length - 1; i >= 0; i--) {
       const view = targets[i];
-      const handler = view.props[eventName];
+      const handler = view.props[eventName] as (
+        evt: typeof customEvent
+      ) => void | undefined;
       if (handler) {
         customEvent.currentTarget = view;
-        customEvent.eventPhase =
-          customEvent.currentTarget === customEvent.target ? 2 : 3;
+        customEvent.detail =
+          eventName === "onTap"
+            ? this.lastClickEvents.get(view)?.detail || 1
+            : eventName === "onDoubleTap"
+            ? 2
+            : 0;
         handler(customEvent);
         if (customEvent.isPropagationStopped) {
           break;
@@ -209,6 +267,10 @@ export class CanvasRenderer extends HasChildren {
       x: d * id * x + -c * id * y + (ty * c - tx * d) * id,
       y: a * id * y + -b * id * x + (-ty * a + tx * b) * id,
     };
+  }
+
+  removeListenersFromView(view: View) {
+    this.lastClickEvents.delete(view);
   }
 
   dispose() {

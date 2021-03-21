@@ -83,14 +83,24 @@ export function App() {
     >
       <header style={{ flex: "none" }}>
         <h1
-          onClick={(evt) => console.log("text click", { ...evt })}
-          onDoubleClick={(evt) => console.log("text doubleclick", { ...evt })}
+          onClick={(evt) => {
+            evt.preventDefault();
+            console.log("text click", { ...evt });
+          }}
+          onDoubleClickCapture={(evt) => {
+            console.log("text doubleclick", { ...evt });
+            evt.stopPropagation();
+          }}
         >
           Test !
           <button
             onPointerDown={() => console.log("button down")}
             onPointerUp={() => console.log("button up")}
-            onClick={() => console.log("button click")}
+            onClick={(evt) => {
+              evt.stopPropagation();
+              evt.preventDefault();
+            }}
+            onDoubleClick={(evt) => console.log("button doubleclick")}
           >
             Hello
           </button>
@@ -137,9 +147,14 @@ function Rectangle({ item }: { item: Item }) {
       transformMatrix={[scale, 0, 0, scale, left, top]}
       padding={20}
       borderRadius={10}
-      onPointerDown={(evt) => {
-        console.log("down parent", evt);
+      onTap={(evt) => {
+        if (evt.detail > 1) {
+          console.log("ignoring tap on parent", evt.detail);
+        } else {
+          console.log("tap parent", evt.detail);
+        }
       }}
+      onDoubleTap={(evt) => console.log("double tap parent", evt.detail)}
     >
       <Pastille />
       <c-view
