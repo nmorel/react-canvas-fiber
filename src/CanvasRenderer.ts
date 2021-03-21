@@ -74,7 +74,7 @@ export class CanvasRenderer extends HasChildren {
     fn("pointerup", this._onPointerUp);
   }
 
-  _handleEvent(evt: PointerEvent, eventName: string) {
+  _handleEvent(evt: PointerEvent, eventName: RCF.EventType) {
     const { left, top } = this.canvas.getBoundingClientRect();
     const pointer = {
       x: evt.clientX - left,
@@ -92,42 +92,80 @@ export class CanvasRenderer extends HasChildren {
 
     const target = targets[targets.length - 1];
 
-    const customEvent = {
+    const customEvent: RCF.PointerEvent = {
       nativeEvent: evt,
-      currentTarget: target,
       target,
-      isStopped: false,
-      stopPropagation() {
-        this.isStopped = true;
-      },
-      stopImmediatePropagation() {
-        this.isStopped = true;
+      currentTarget: target,
+      bubbles: true,
+      cancelable: evt.cancelable,
+      eventPhase: 0,
+      isTrusted: evt.isTrusted,
+      get defaultPrevented() {
+        return evt.defaultPrevented;
       },
       preventDefault() {
         evt.preventDefault();
       },
+      isPropagationStopped: false,
+      stopPropagation() {
+        this.isPropagationStopped = true;
+      },
+      timeStamp: evt.timeStamp,
+      type: evt.type,
+      altKey: evt.altKey,
+      button: evt.button,
+      buttons: evt.buttons,
+      clientX: evt.clientX,
+      clientY: evt.clientY,
+      ctrlKey: evt.ctrlKey,
+      metaKey: evt.metaKey,
+      movementX: evt.movementX,
+      movementY: evt.movementY,
+      pageX: evt.pageX,
+      pageY: evt.pageY,
+      screenX: evt.screenX,
+      screenY: evt.screenY,
+      shiftKey: evt.shiftKey,
+      pointerId: evt.pointerId,
+      pressure: evt.pressure,
+      tangentialPressure: evt.tangentialPressure,
+      tiltX: evt.tiltX,
+      tiltY: evt.tiltY,
+      twist: evt.twist,
+      width: evt.width,
+      height: evt.height,
+      pointerType: evt.pointerType as any,
+      isPrimary: evt.isPrimary,
+      canvasX: pointer.x,
+      canvasY: pointer.y,
     };
 
     // Capture phase
     for (const view of targets) {
-      if (view.props[`${eventName}Capture`]) {
+      const handler = view.props[`${eventName}Capture` as const];
+      if (handler) {
         customEvent.currentTarget = view;
-        view.props[`${eventName}Capture`](customEvent);
-        if (customEvent.isStopped) {
+        customEvent.eventPhase =
+          customEvent.currentTarget === customEvent.target ? 2 : 1;
+        handler(customEvent);
+        if (customEvent.isPropagationStopped) {
           break;
         }
       }
     }
-    if (customEvent.isStopped) {
+    if (customEvent.isPropagationStopped) {
       return;
     }
     // Bubbling phase
     for (let i = targets.length - 1; i >= 0; i--) {
       const view = targets[i];
-      if (view.props[eventName]) {
+      const handler = view.props[eventName];
+      if (handler) {
         customEvent.currentTarget = view;
-        view.props[eventName](customEvent);
-        if (customEvent.isStopped) {
+        customEvent.eventPhase =
+          customEvent.currentTarget === customEvent.target ? 2 : 3;
+        handler(customEvent);
+        if (customEvent.isPropagationStopped) {
           break;
         }
       }

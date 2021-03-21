@@ -82,7 +82,19 @@ export function App() {
       }}
     >
       <header style={{ flex: "none" }}>
-        <h1>Test !</h1>
+        <h1
+          onClick={(evt) => console.log("text click", { ...evt })}
+          onDoubleClick={(evt) => console.log("text doubleclick", { ...evt })}
+        >
+          Test !
+          <button
+            onPointerDown={() => console.log("button down")}
+            onPointerUp={() => console.log("button up")}
+            onClick={() => console.log("button click")}
+          >
+            Hello
+          </button>
+        </h1>
       </header>
       <main ref={refContainer} style={{ display: "flex", flex: "1" }}>
         {!!width && !!height && (
@@ -125,22 +137,11 @@ function Rectangle({ item }: { item: Item }) {
       transformMatrix={[scale, 0, 0, scale, left, top]}
       padding={20}
       borderRadius={10}
+      onPointerDown={(evt) => {
+        console.log("down parent", evt);
+      }}
     >
-      <c-view
-        backgroundColor="green"
-        justifyContent="center"
-        alignItems="center"
-        position="absolute"
-        right={10}
-        top={10}
-        width={10}
-        height={10}
-        borderRadius={5}
-        onPointerDown={(evt) => {
-          evt.stopPropagation();
-          console.log("down !", evt);
-        }}
-      />
+      <Pastille />
       <c-view
         flex={1}
         backgroundColor={color}
@@ -168,6 +169,38 @@ function Rectangle({ item }: { item: Item }) {
         )}
       </c-view>
     </c-view>
+  );
+}
+
+function useIsPressed() {
+  const [isPressed, setIsPressed] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (!isPressed) return;
+    const onUp = () => setIsPressed(false);
+    document.addEventListener("pointerup", onUp);
+    return () => document.removeEventListener("pointerup", onUp);
+  }, [isPressed]);
+  return {
+    isPressed,
+    onPointerDown: () => setIsPressed(true),
+  };
+}
+
+function Pastille() {
+  const { isPressed, ...handlers } = useIsPressed();
+  return (
+    <c-view
+      backgroundColor={isPressed ? "red" : "green"}
+      justifyContent="center"
+      alignItems="center"
+      position="absolute"
+      right={10}
+      top={10}
+      width={10}
+      height={10}
+      borderRadius={5}
+      {...handlers}
+    />
   );
 }
 

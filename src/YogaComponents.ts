@@ -134,7 +134,7 @@ const alignContentToYoga: Record<
   "space-around": ALIGN_SPACE_AROUND,
 };
 
-export type ViewProps = ViewStyleProps;
+export type ViewProps = ViewStyleProps & RCF.Handlers;
 
 export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   node: YogaNode;
@@ -435,9 +435,10 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   }
 }
 
-export type TextProps = TextStyleProps & {
-  text: string;
-};
+export type TextProps = TextStyleProps &
+  RCF.Handlers & {
+    text: string;
+  };
 
 export class Text extends View<TextProps> {
   constructor(props: TextProps) {
@@ -479,9 +480,10 @@ export class Text extends View<TextProps> {
   }
 }
 
-export type ImageProps = ImageStyleProps & {
-  image: HTMLImageElement;
-};
+export type ImageProps = ImageStyleProps &
+  RCF.Handlers & {
+    image: HTMLImageElement;
+  };
 
 export class Image extends View<ImageProps> {
   renderContent(ctx: CanvasRenderingContext2D) {
