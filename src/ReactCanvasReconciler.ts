@@ -20,6 +20,8 @@ function insertBefore(
 
 function removeChild(parentInstance: HasChildren, child: View) {
   parentInstance?.removeChild(child);
+  child.destroy();
+  child.container.removeListenersFromView(child);
 }
 
 type Props = JSX.IntrinsicElements["c-view"] & {
@@ -42,16 +44,16 @@ let Renderer = Reconciler<
   number
 >({
   now,
-  createInstance(type, props) {
+  createInstance(type, props, container) {
     switch (type) {
       case "c-view": {
-        return new View(props);
+        return new View(props, container);
       }
       case "c-text": {
-        return new Text(props as any);
+        return new Text(props as any, container);
       }
       case "c-image": {
-        return new Image(props as any);
+        return new Image(props as any, container);
       }
       default:
         throw new Error(`unknown type ${type}`);
@@ -136,7 +138,7 @@ let Renderer = Reconciler<
     // noop
   },
   resetAfterCommit(container) {
-    container.draw();
+    container.requestDraw();
   },
   clearContainer() {
     // noop

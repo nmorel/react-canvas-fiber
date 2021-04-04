@@ -140,7 +140,6 @@ export type ViewProps = ViewStyleProps & RCF.Handlers;
 export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   container: CanvasRenderer;
   node: YogaNode;
-  children: View[];
   props: Props;
 
   constructor(props: Props, container: CanvasRenderer) {
@@ -148,7 +147,6 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     this.container = container;
 
     this.node = Node.create();
-    this.children = [];
     this.props = props;
 
     this.layout();

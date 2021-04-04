@@ -27,6 +27,7 @@ declare global {
       T extends View = View
     > = Omit<
       NativeEvent,
+      | "type"
       | "target"
       | "currentTarget"
       | "eventPhase"
@@ -36,6 +37,7 @@ declare global {
       | "stopPropagation"
     > & {
       nativeEvent: NativeEvent;
+      type: string;
       target: T;
       currentTarget: T;
 
@@ -63,7 +65,8 @@ declare global {
       | "onPointerDown"
       | "onPointerMove"
       | "onPointerUp"
-      | "onPointerOver";
+      | "onPointerOver"
+      | "onPointerOut";
     type MouseEventType = "onTap" | "onDoubleTap";
     type WheelEventType = "onWheel";
     type EventType = PointerEventType | MouseEventType | WheelEventType;

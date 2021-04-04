@@ -81,8 +81,51 @@ export function App() {
         flexDirection: "column",
       }}
     >
-      <header style={{ flex: "none" }}>
+      <header
+        style={{ flex: "none", position: "relative" }}
+        onPointerOver={(evt) =>
+          console.log(
+            "header pointer over",
+            evt.target,
+            evt.currentTarget,
+            evt.eventPhase
+          )
+        }
+        // onPointerEnterCapture={(evt) =>
+        //   console.log(
+        //     "header pointer enter capture",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        // onPointerEnter={(evt) =>
+        //   console.log(
+        //     "header pointer enter",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        // onPointerLeave={(evt) =>
+        //   console.log(
+        //     "header pointer leave",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        onPointerOut={(evt) =>
+          console.log(
+            "header pointer out",
+            evt.target,
+            evt.currentTarget,
+            evt.eventPhase
+          )
+        }
+      >
         <h1
+          style={{ background: "red", margin: 0 }}
           onClick={(evt) => {
             evt.preventDefault();
             console.log("text click", { ...evt });
@@ -91,6 +134,47 @@ export function App() {
             console.log("text doubleclick", { ...evt });
             evt.stopPropagation();
           }}
+          // onPointerMove={(evt) => console.log("text pointer move")}
+          onPointerOver={(evt) =>
+            console.log(
+              "text pointer over",
+              evt.target,
+              evt.currentTarget,
+              evt.eventPhase
+            )
+          }
+          // onPointerEnterCapture={(evt) =>
+          //   console.log(
+          //     "text pointer enter capture",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          // onPointerEnter={(evt) =>
+          //   console.log(
+          //     "text pointer enter",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          // onPointerLeave={(evt) =>
+          //   console.log(
+          //     "text pointer leave",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          onPointerOut={(evt) =>
+            console.log(
+              "text pointer out",
+              evt.target,
+              evt.currentTarget,
+              evt.eventPhase
+            )
+          }
         >
           Test !
           <button
@@ -100,7 +184,20 @@ export function App() {
               evt.stopPropagation();
               evt.preventDefault();
             }}
-            onDoubleClick={(evt) => console.log("button doubleclick")}
+            // onDoubleClick={(evt) => console.log("button doubleclick")}
+            // onPointerMove={(evt) => console.log("button pointer move")}
+            onPointerOver={(evt) =>
+              console.log("button pointer over", evt.target, evt.currentTarget)
+            }
+            // onPointerEnter={(evt) =>
+            //   console.log("button pointer enter", evt.target, evt.currentTarget)
+            // }
+            // onPointerLeave={(evt) =>
+            //   console.log("button pointer leave", evt.target, evt.currentTarget)
+            // }
+            onPointerOut={(evt) =>
+              console.log("button pointer out", evt.target, evt.currentTarget)
+            }
           >
             Hello
           </button>
@@ -131,8 +228,32 @@ export function App() {
   );
 }
 
+function useIsPressed() {
+  const [isPressed, setIsPressed] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (!isPressed) return;
+    const onUp = () => setIsPressed(false);
+    document.addEventListener("pointerup", onUp);
+    return () => document.removeEventListener("pointerup", onUp);
+  }, [isPressed]);
+  return {
+    isPressed,
+    onPointerDown: () => setIsPressed(true),
+  };
+}
+
+function useIsOver() {
+  const [isOver, setIsOver] = React.useState(false);
+  return {
+    isOver,
+    onPointerOver: () => setIsOver(true),
+    onPointerOut: () => setIsOver(false),
+  };
+}
+
 function Rectangle({ item }: { item: Item }) {
   const { width, height, left, top, color, scale } = item;
+  const { isOver, ...handlers } = useIsOver();
   return (
     <c-view
       position="absolute"
@@ -140,7 +261,7 @@ function Rectangle({ item }: { item: Item }) {
       left={0}
       width={width}
       height={height}
-      borderColor="red"
+      borderColor={isOver ? "blue" : "red"}
       borderWidth={2}
       backgroundColor="yellow"
       justifyContent="center"
@@ -155,6 +276,7 @@ function Rectangle({ item }: { item: Item }) {
         }
       }}
       onDoubleTap={(evt) => console.log("double tap parent", evt.detail)}
+      {...handlers}
     >
       <Pastille />
       <c-view
@@ -185,20 +307,6 @@ function Rectangle({ item }: { item: Item }) {
       </c-view>
     </c-view>
   );
-}
-
-function useIsPressed() {
-  const [isPressed, setIsPressed] = React.useState(false);
-  React.useLayoutEffect(() => {
-    if (!isPressed) return;
-    const onUp = () => setIsPressed(false);
-    document.addEventListener("pointerup", onUp);
-    return () => document.removeEventListener("pointerup", onUp);
-  }, [isPressed]);
-  return {
-    isPressed,
-    onPointerDown: () => setIsPressed(true),
-  };
 }
 
 function Pastille() {

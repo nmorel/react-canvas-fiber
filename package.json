@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "lodash-es": "^4.17.21",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-reconciler": "^0.26.1",
@@ -12,6 +13,7 @@
     "yoga-layout-prebuilt": "^1.10.0"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.4",
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
     "@types/react-reconciler": "^0.26.0",

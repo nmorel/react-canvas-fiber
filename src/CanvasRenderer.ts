@@ -1,5 +1,6 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
+import { intersection } from "lodash-es";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -12,6 +13,9 @@ export class CanvasRenderer extends HasChildren {
     View,
     { detail: number; timestamp: number }
   > = new Map();
+  private lastHoveredTargets: View[] = [];
+
+  private requestingDraw = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -40,7 +44,19 @@ export class CanvasRenderer extends HasChildren {
     this.canvas.height = this.containerHeight * this.scaleRatio;
   }
 
+  requestDraw() {
+    if (!this.requestingDraw) {
+      Promise.resolve().then(() => {
+        if (this.requestingDraw) {
+          this.draw();
+        }
+      });
+    }
+    this.requestingDraw = true;
+  }
+
   draw() {
+    this.requestingDraw = false;
     console.log("drawing canvas");
     const ctx = this.context;
     ctx.clearRect(
@@ -74,6 +90,19 @@ export class CanvasRenderer extends HasChildren {
     this._handleEvent(evt, "onPointerUp");
   };
 
+  _onPointerLeave = (evt: PointerEvent) => {
+    const pointer = this._convertEvtPointer(evt);
+    if (this.lastHoveredTargets.length) {
+      const lastHoveredTarget = this.lastHoveredTargets[
+        this.lastHoveredTargets.length - 1
+      ];
+      let customEvent = this._createEvent(evt, lastHoveredTarget, pointer);
+      customEvent.type = "pointerout";
+      this._callHandlers(this.lastHoveredTargets, customEvent, "onPointerOut");
+    }
+    this.lastHoveredTargets = [];
+  };
+
   _onClick = (evt: MouseEvent) => {
     this._handleEvent(evt, "onTap");
   };
@@ -89,7 +118,7 @@ export class CanvasRenderer extends HasChildren {
     fn("pointerdown", this._onPointerDown);
     fn("pointermove", this._onPointerMove);
     fn("pointerup", this._onPointerUp);
-    fn("pointerover", this._onPointerOver);
+    fn("pointerleave", this._onPointerLeave);
     fn("wheel", this._onWheel);
     fn("click", this._onClick);
   }
@@ -101,54 +130,48 @@ export class CanvasRenderer extends HasChildren {
     evt: Event,
     eventName: RCF.EventType
   ): void {
-    const { left, top } = this.canvas.getBoundingClientRect();
-    const pointer = {
-      x: evt.clientX - left,
-      y: evt.clientY - top,
-    };
+    const pointer = this._convertEvtPointer(evt);
     const targets: View[] = [];
     for (let i = this.children.length - 1; i >= 0; i--) {
       if (this._findTargetOnView(this.children[i], pointer, targets)) {
         break;
       }
     }
+
+    if (eventName === "onPointerMove") {
+      if (
+        this.lastHoveredTargets.length &&
+        (this.lastHoveredTargets.length !== targets.length ||
+          intersection(this.lastHoveredTargets, targets).length !==
+            this.lastHoveredTargets.length)
+      ) {
+        const lastHoveredTarget = this.lastHoveredTargets[
+          this.lastHoveredTargets.length - 1
+        ];
+        let customEvent = this._createEvent(evt, lastHoveredTarget, pointer);
+        customEvent.type = "pointerout";
+        this._callHandlers(
+          this.lastHoveredTargets,
+          customEvent,
+          "onPointerOut"
+        );
+      }
+      if (targets.length) {
+        const newHoveredTarget = targets[targets.length - 1];
+        let customEvent = this._createEvent(evt, newHoveredTarget, pointer);
+        customEvent.type = "pointerover";
+        this._callHandlers(targets, customEvent, "onPointerOver");
+      }
+      this.lastHoveredTargets = targets;
+    }
+
     if (!targets.length) {
       return;
     }
 
     const target = targets[targets.length - 1];
 
-    let {
-      target: nativeTarget,
-      currentTarget,
-      eventPhase,
-      defaultPrevented,
-      preventDefault,
-      stopPropagation,
-      timeStamp,
-      ...evtProps
-    } = evt;
-
-    const customEvent: RCF.Event<Event, View> = {
-      ...evtProps,
-      timestamp: performance.now(),
-      nativeEvent: evt,
-      target,
-      currentTarget: target,
-      eventPhase: 0,
-      get defaultPrevented() {
-        return evt.defaultPrevented;
-      },
-      preventDefault() {
-        evt.preventDefault();
-      },
-      isPropagationStopped: false,
-      stopPropagation() {
-        this.isPropagationStopped = true;
-      },
-      canvasX: pointer.x,
-      canvasY: pointer.y,
-    };
+    let customEvent = this._createEvent(evt, target, pointer);
 
     let doubleTapTargets: View[] | undefined;
     if (eventName === "onTap") {
@@ -175,8 +198,59 @@ export class CanvasRenderer extends HasChildren {
     this._callHandlers(targets, customEvent, eventName);
 
     if (doubleTapTargets?.length) {
+      customEvent = this._createEvent(evt, target, pointer);
+      customEvent.type = "dblclick";
       this._callHandlers(doubleTapTargets, customEvent, "onDoubleTap");
     }
+  }
+
+  _convertEvtPointer<Event extends PointerEvent | MouseEvent | WheelEvent>(
+    evt: Event
+  ) {
+    const { left, top } = this.canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - left,
+      y: evt.clientY - top,
+    };
+  }
+
+  _createEvent<Event extends PointerEvent | MouseEvent | WheelEvent>(
+    evt: Event,
+    target: View,
+    pointer: { x: number; y: number }
+  ): RCF.Event<Event, View> {
+    const {
+      type,
+      target: nativeTarget,
+      currentTarget,
+      eventPhase,
+      defaultPrevented,
+      preventDefault,
+      stopPropagation,
+      timeStamp,
+      ...evtProps
+    } = evt;
+    return {
+      ...evtProps,
+      type,
+      timestamp: performance.now(),
+      nativeEvent: evt,
+      target,
+      currentTarget: target,
+      eventPhase: 0,
+      get defaultPrevented() {
+        return evt.defaultPrevented;
+      },
+      preventDefault() {
+        evt.preventDefault();
+      },
+      isPropagationStopped: false,
+      stopPropagation() {
+        this.isPropagationStopped = true;
+      },
+      canvasX: pointer.x,
+      canvasY: pointer.y,
+    };
   }
 
   _callHandlers(
@@ -271,9 +345,11 @@ export class CanvasRenderer extends HasChildren {
 
   removeListenersFromView(view: View) {
     this.lastClickEvents.delete(view);
+    this.lastHoveredTargets = this.lastHoveredTargets.filter((v) => v !== view);
   }
 
   dispose() {
     this._addOrRemoveListeners(false);
+    this.requestingDraw = false;
   }
 }
