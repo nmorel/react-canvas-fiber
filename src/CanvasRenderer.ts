@@ -1,6 +1,8 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
 import { difference, intersection } from "lodash-es";
+import { newTextBreaker } from "./text-breaker";
+import type { TextBreaker } from "./text-breaker";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -8,6 +10,7 @@ export class CanvasRenderer extends HasChildren {
   containerWidth = 0;
   containerHeight = 0;
   scaleRatio = 1;
+  textBreaker: TextBreaker | null = null;
 
   private lastClickEvents: Map<
     View,
@@ -15,6 +18,7 @@ export class CanvasRenderer extends HasChildren {
   > = new Map();
   private lastHoveredTargets: View[] = [];
 
+  private assetsLoaded = false;
   private requestingDraw = false;
 
   constructor(
@@ -31,6 +35,14 @@ export class CanvasRenderer extends HasChildren {
     this.context = context;
     this.updateDimensions(options);
     this._addOrRemoveListeners(true);
+
+    newTextBreaker().then((textBreaker) => {
+      this.textBreaker = textBreaker;
+      this.assetsLoaded = true;
+      if (this.requestingDraw) {
+        this.draw();
+      }
+    });
   }
 
   updateDimensions({ width, height }: { width: number; height: number }) {
@@ -55,7 +67,11 @@ export class CanvasRenderer extends HasChildren {
     this.requestingDraw = true;
   }
 
-  draw() {
+  private draw() {
+    if (!this.assetsLoaded) {
+      return;
+    }
+
     this.requestingDraw = false;
     console.log("drawing canvas");
     const ctx = this.context;

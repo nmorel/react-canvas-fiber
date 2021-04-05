@@ -11,31 +11,29 @@ const itemText1 = {
   left: 40,
   top: 50,
   width: 300,
-  height: 180,
   scale: 1,
   color: "green",
-  text: "Hello",
+  text: "😈👿👹👺🤡💩👻💀Hello World !👽👾🤖🎃😺😹😻😼😽",
 };
 
 const itemText2 = {
   id: "2",
   kind: "text" as const,
   left: 40,
-  top: 260,
+  top: 200,
   width: 300,
-  height: 180,
   scale: 0.8,
   color: "red",
-  text: "World",
+  text:
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
 };
 
 const itemImage1 = {
   id: "3",
   kind: "image" as const,
-  left: 40,
-  top: 450,
+  left: 400,
+  top: 30,
   width: 300,
-  height: 180,
   scale: 1.5,
   color: "red",
   placeholderUrl: largeImagePlaceholder,
@@ -235,7 +233,7 @@ function useIsOver() {
 }
 
 function Rectangle({ item }: { item: Item }) {
-  const { width, height, left, top, color, scale } = item;
+  const { width, left, top, color, scale } = item;
   const { isOver, ...handlers } = useIsOver();
   return (
     <c-view
@@ -243,7 +241,7 @@ function Rectangle({ item }: { item: Item }) {
       top={0}
       left={0}
       width={width}
-      height={height}
+      minHeight={120}
       borderColor={isOver ? "blue" : "red"}
       borderWidth={2}
       backgroundColor="yellow"
@@ -285,7 +283,14 @@ function Rectangle({ item }: { item: Item }) {
             <Image src={item.imageUrl} flex={1} width="100%" height="100%" />
           </React.Suspense>
         ) : (
-          <c-text text={item.text} color="white" fontSize={32} />
+          <c-text
+            text={item.text}
+            color="white"
+            fontSize={24}
+            fontFamily={"Helvetica Neue"}
+            textAlign={"center"}
+            padding={12}
+          />
         )}
       </c-view>
     </c-view>

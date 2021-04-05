@@ -51,6 +51,7 @@ import {
   TextStyleProps,
   ViewStyleProps,
 } from "./Style";
+import type { TextBreaker } from "./text-breaker";
 
 const flexDirectionToYoga: Record<
   Exclude<ViewProps["flexDirection"], undefined>,
@@ -446,20 +447,23 @@ export type TextProps = TextStyleProps &
   };
 
 export class Text extends View<TextProps> {
+  wrappedText: ReturnType<TextBreaker["breakText"]> | null = null;
+
   constructor(props: TextProps, container: CanvasRenderer) {
     super(props, container);
     this.node.setMeasureFunc(
       (width, widthMeasureMode, height, heightMeasureMode) => {
-        // TODO add real measurement
-        const canvas = new OffscreenCanvas(1000, 1000);
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
-        }
-        const metrics = ctx?.measureText(this.props.text);
+        if (!container.textBreaker) return { width: 0, height: 0 };
+
+        this.wrappedText = container.textBreaker.breakText(
+          this.props.text,
+          width,
+          this.fontStyle
+        );
+        const maxTextWidth = Math.max(...this.wrappedText.map((t) => t.width));
         return {
-          width: metrics?.width || 0,
-          height: this.props.fontSize ?? 16,
+          width: maxTextWidth || 0,
+          height: this.wrappedText.length * this.lineHeight,
         };
       }
     );
@@ -476,12 +480,54 @@ export class Text extends View<TextProps> {
   renderContent(ctx: CanvasRenderingContext2D) {
     ctx.textBaseline = "top";
     ctx.fillStyle = this.props.color ?? "black";
-    ctx.font = `${this.props.fontSize ?? 16}px sans-serif`;
-    ctx.fillText(
-      this.props.text,
-      this.node.getComputedLeft(),
-      this.node.getComputedTop()
-    );
+    ctx.font = this.fontStyle;
+
+    this.wrappedText?.forEach(({ text, width }, index) => {
+      let left =
+        this.node.getComputedLeft() + this.node.getComputedPadding(EDGE_LEFT);
+
+      switch (this.props.textAlign) {
+        case "justify":
+        // Find a better way
+        // https://www.rose-hulman.edu/class/csse/csse221/200910/Projects/Markov/justification.html
+        case "center":
+          left +=
+            (this.node.getComputedWidth() -
+              this.node.getComputedPadding(EDGE_LEFT) -
+              this.node.getComputedPadding(EDGE_RIGHT) -
+              width) /
+            2;
+          break;
+        case "right":
+          left +=
+            this.node.getComputedWidth() -
+            this.node.getComputedPadding(EDGE_LEFT) -
+            this.node.getComputedPadding(EDGE_RIGHT) -
+            width;
+          break;
+        case "auto":
+        case "left":
+        default:
+          break;
+      }
+      const top =
+        this.node.getComputedTop() +
+        this.node.getComputedPadding(EDGE_TOP) +
+        this.lineHeight * index;
+      ctx.fillText(text, left, top);
+    });
+  }
+
+  private get fontSize() {
+    return this.props.fontSize || 16;
+  }
+
+  private get lineHeight() {
+    return this.props.lineHeight || this.fontSize;
+  }
+
+  private get fontStyle() {
+    return `${this.fontSize}px ${this.props.fontFamily || "sans-serif"}`;
   }
 }
 
