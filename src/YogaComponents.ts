@@ -485,11 +485,12 @@ export class Text extends View<TextProps> {
     this.wrappedText?.forEach(({ text, width }, index) => {
       let left =
         this.node.getComputedLeft() + this.node.getComputedPadding(EDGE_LEFT);
+      const top =
+        this.node.getComputedTop() +
+        this.node.getComputedPadding(EDGE_TOP) +
+        this.lineHeight * index;
 
       switch (this.props.textAlign) {
-        case "justify":
-        // Find a better way
-        // https://www.rose-hulman.edu/class/csse/csse221/200910/Projects/Markov/justification.html
         case "center":
           left +=
             (this.node.getComputedWidth() -
@@ -497,6 +498,7 @@ export class Text extends View<TextProps> {
               this.node.getComputedPadding(EDGE_RIGHT) -
               width) /
             2;
+          ctx.fillText(text, left, top);
           break;
         case "right":
           left +=
@@ -504,17 +506,48 @@ export class Text extends View<TextProps> {
             this.node.getComputedPadding(EDGE_LEFT) -
             this.node.getComputedPadding(EDGE_RIGHT) -
             width;
+          ctx.fillText(text, left, top);
           break;
+        case "justify": {
+          let availableWidth =
+            this.node.getComputedWidth() -
+            this.node.getComputedPadding(EDGE_LEFT) -
+            this.node.getComputedPadding(EDGE_RIGHT) -
+            width;
+          if (!availableWidth) {
+            ctx.fillText(text, left, top);
+            break;
+          }
+
+          const space = "\u0020";
+          const words = text.split(space);
+          if (words.length <= 1) {
+            ctx.fillText(text, left, top);
+            break;
+          }
+
+          const spaceLength =
+            this.container.textBreaker?.measureText(space, this.fontStyle) ?? 0;
+          availableWidth += (words.length - 1) * spaceLength;
+
+          const spacingBetweenEachWord = availableWidth / (words.length - 1);
+          words.forEach((word, index) => {
+            if (index) {
+              left += spacingBetweenEachWord;
+            }
+            ctx.fillText(word, left, top);
+            left +=
+              this.container.textBreaker?.measureText(word, this.fontStyle) ??
+              0;
+          });
+          break;
+        }
         case "auto":
         case "left":
         default:
+          ctx.fillText(text, left, top);
           break;
       }
-      const top =
-        this.node.getComputedTop() +
-        this.node.getComputedPadding(EDGE_TOP) +
-        this.lineHeight * index;
-      ctx.fillText(text, left, top);
     });
   }
 

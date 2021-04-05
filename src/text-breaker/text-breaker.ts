@@ -30,6 +30,11 @@ export class TextBreaker {
     this.lineBreakTrie = new UnicodeTrie(lineBreakClassesBuffer);
   }
 
+  measureText(text: string, fontStyle: string) {
+    const measureText = this.getMeasurementContext(fontStyle);
+    return measureText(text);
+  }
+
   breakText(
     text: string,
     maxWidth: number,

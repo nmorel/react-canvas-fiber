@@ -81,92 +81,92 @@ export function App() {
     >
       <header
         style={{ flex: "none", position: "relative" }}
-        onPointerOver={(evt) =>
-          console.log(
-            "header pointer over",
-            evt.target,
-            evt.currentTarget,
-            evt.eventPhase
-          )
-        }
-        onPointerEnter={(evt) =>
-          console.log(
-            "header pointer enter",
-            evt.target,
-            evt.currentTarget,
-            evt.eventPhase
-          )
-        }
-        onPointerLeave={(evt) =>
-          console.log(
-            "header pointer leave",
-            evt.target,
-            evt.currentTarget,
-            evt.eventPhase
-          )
-        }
-        onPointerOut={(evt) =>
-          console.log(
-            "header pointer out",
-            evt.target,
-            evt.currentTarget,
-            evt.eventPhase
-          )
-        }
+        // onPointerOver={(evt) =>
+        //   console.log(
+        //     "header pointer over",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        // onPointerEnter={(evt) =>
+        //   console.log(
+        //     "header pointer enter",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        // onPointerLeave={(evt) =>
+        //   console.log(
+        //     "header pointer leave",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
+        // onPointerOut={(evt) =>
+        //   console.log(
+        //     "header pointer out",
+        //     evt.target,
+        //     evt.currentTarget,
+        //     evt.eventPhase
+        //   )
+        // }
       >
         <h1
           style={{ background: "red", margin: 0 }}
-          onClick={(evt) => {
-            evt.preventDefault();
-            console.log("text click", { ...evt });
-          }}
-          onDoubleClickCapture={(evt) => {
-            console.log("text doubleclick", { ...evt });
-            evt.stopPropagation();
-          }}
-          onPointerOver={(evt) =>
-            console.log(
-              "text pointer over",
-              evt.target,
-              evt.currentTarget,
-              evt.eventPhase
-            )
-          }
-          onPointerEnter={(evt) =>
-            console.log(
-              "text pointer enter",
-              evt.target,
-              evt.currentTarget,
-              evt.eventPhase
-            )
-          }
-          onPointerLeave={(evt) =>
-            console.log(
-              "text pointer leave",
-              evt.target,
-              evt.currentTarget,
-              evt.eventPhase
-            )
-          }
-          onPointerOut={(evt) =>
-            console.log(
-              "text pointer out",
-              evt.target,
-              evt.currentTarget,
-              evt.eventPhase
-            )
-          }
+          // onClick={(evt) => {
+          //   evt.preventDefault();
+          //   console.log("text click", { ...evt });
+          // }}
+          // onDoubleClickCapture={(evt) => {
+          //   console.log("text doubleclick", { ...evt });
+          //   evt.stopPropagation();
+          // }}
+          // onPointerOver={(evt) =>
+          //   console.log(
+          //     "text pointer over",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          // onPointerEnter={(evt) =>
+          //   console.log(
+          //     "text pointer enter",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          // onPointerLeave={(evt) =>
+          //   console.log(
+          //     "text pointer leave",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
+          // onPointerOut={(evt) =>
+          //   console.log(
+          //     "text pointer out",
+          //     evt.target,
+          //     evt.currentTarget,
+          //     evt.eventPhase
+          //   )
+          // }
         >
           Test !
-          <button
+          {/* <button
             onPointerDown={() => console.log("button down")}
             onPointerUp={() => console.log("button up")}
             onClick={(evt) => {
               evt.stopPropagation();
               evt.preventDefault();
             }}
-            // onDoubleClick={(evt) => console.log("button doubleclick")}
-            // onPointerMove={(evt) => console.log("button pointer move")}
+            onDoubleClick={(evt) => console.log("button doubleclick")}
+            onPointerMove={(evt) => console.log("button pointer move")}
             onPointerOver={(evt) =>
               console.log("button pointer over", evt.target, evt.currentTarget)
             }
@@ -181,10 +181,13 @@ export function App() {
             }
           >
             Hello
-          </button>
+          </button> */}
         </h1>
       </header>
-      <main ref={refContainer} style={{ display: "flex", flex: "1" }}>
+      <main
+        ref={refContainer}
+        style={{ display: "flex", flex: "1", position: "relative" }}
+      >
         {!!width && !!height && (
           <Canvas
             width={width}
@@ -204,6 +207,45 @@ export function App() {
             ))}
           </Canvas>
         )}
+        {/* <div
+          style={{
+            position: "absolute",
+            width: 300,
+            padding: 20,
+            left: 0,
+            top: 0,
+            transformOrigin: "left top",
+            transform: `matrix(0.8, 0, 0, 0.8, 40, 200)`,
+            display: "flex",
+            justifyContent: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              background: "rgba(255, 0, 0, 0.5)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                padding: 12,
+                fontSize: 24,
+                fontFamily: "Helvetica Neue",
+                color: "white",
+                lineHeight: "24px",
+                textAlign: "justify",
+                wordBreak: "break-word",
+              }}
+            >
+              {items[1].text}
+            </div>
+          </div>
+        </div> */}
       </main>
     </div>
   );
@@ -288,7 +330,7 @@ function Rectangle({ item }: { item: Item }) {
             color="white"
             fontSize={24}
             fontFamily={"Helvetica Neue"}
-            textAlign={"center"}
+            textAlign={"justify"}
             padding={12}
           />
         )}
