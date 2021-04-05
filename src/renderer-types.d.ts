@@ -65,6 +65,8 @@ declare global {
       | "onPointerDown"
       | "onPointerMove"
       | "onPointerUp"
+      | "onPointerEnter"
+      | "onPointerLeave"
       | "onPointerOver"
       | "onPointerOut";
     type MouseEventType = "onTap" | "onDoubleTap";

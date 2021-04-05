@@ -1,6 +1,6 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
-import { intersection } from "lodash-es";
+import { difference, intersection } from "lodash-es";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -138,7 +138,8 @@ export class CanvasRenderer extends HasChildren {
       }
     }
 
-    if (eventName === "onPointerMove") {
+    if (eventName === "onPointerMove" || eventName === "onPointerDown") {
+      // pointerout
       if (
         this.lastHoveredTargets.length &&
         (this.lastHoveredTargets.length !== targets.length ||
@@ -156,12 +157,53 @@ export class CanvasRenderer extends HasChildren {
           "onPointerOut"
         );
       }
+
+      // pointerleave
+      const targetsNoLongerHovered = difference(
+        this.lastHoveredTargets,
+        targets
+      );
+      if (targetsNoLongerHovered.length) {
+        let customEvent = this._createEvent(
+          evt,
+          targetsNoLongerHovered[targetsNoLongerHovered.length - 1],
+          pointer
+        );
+        customEvent.type = "pointerleave";
+        targetsNoLongerHovered.reverse();
+        this._callHandlers(
+          targetsNoLongerHovered,
+          customEvent,
+          "onPointerLeave",
+          false
+        );
+      }
+
+      // pointerenter
+      const targetsNewlyHovered = difference(targets, this.lastHoveredTargets);
+      if (targetsNewlyHovered.length) {
+        let customEvent = this._createEvent(
+          evt,
+          targetsNewlyHovered[targetsNewlyHovered.length - 1],
+          pointer
+        );
+        customEvent.type = "pointerenter";
+        this._callHandlers(
+          targetsNewlyHovered,
+          customEvent,
+          "onPointerEnter",
+          false
+        );
+      }
+
+      // pointerover
       if (targets.length) {
         const newHoveredTarget = targets[targets.length - 1];
         let customEvent = this._createEvent(evt, newHoveredTarget, pointer);
         customEvent.type = "pointerover";
         this._callHandlers(targets, customEvent, "onPointerOver");
       }
+
       this.lastHoveredTargets = targets;
     }
 
@@ -256,8 +298,32 @@ export class CanvasRenderer extends HasChildren {
   _callHandlers(
     targets: View[],
     customEvent: RCF.Event<any, any>,
-    eventName: RCF.EventType
+    eventName: RCF.EventType,
+    bubbles = true
   ) {
+    if (!bubbles) {
+      customEvent.eventPhase = 3;
+      for (const view of targets) {
+        const handler = view.props[eventName] as (
+          evt: typeof customEvent
+        ) => void | undefined;
+        if (handler) {
+          customEvent.currentTarget = view;
+          customEvent.detail =
+            eventName === "onTap"
+              ? this.lastClickEvents.get(view)?.detail || 1
+              : eventName === "onDoubleTap"
+              ? 2
+              : 0;
+          handler(customEvent);
+          if (customEvent.isPropagationStopped) {
+            break;
+          }
+        }
+      }
+      return;
+    }
+
     // Capture phase
     customEvent.eventPhase = 1;
     for (const view of targets) {

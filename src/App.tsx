@@ -91,30 +91,22 @@ export function App() {
             evt.eventPhase
           )
         }
-        // onPointerEnterCapture={(evt) =>
-        //   console.log(
-        //     "header pointer enter capture",
-        //     evt.target,
-        //     evt.currentTarget,
-        //     evt.eventPhase
-        //   )
-        // }
-        // onPointerEnter={(evt) =>
-        //   console.log(
-        //     "header pointer enter",
-        //     evt.target,
-        //     evt.currentTarget,
-        //     evt.eventPhase
-        //   )
-        // }
-        // onPointerLeave={(evt) =>
-        //   console.log(
-        //     "header pointer leave",
-        //     evt.target,
-        //     evt.currentTarget,
-        //     evt.eventPhase
-        //   )
-        // }
+        onPointerEnter={(evt) =>
+          console.log(
+            "header pointer enter",
+            evt.target,
+            evt.currentTarget,
+            evt.eventPhase
+          )
+        }
+        onPointerLeave={(evt) =>
+          console.log(
+            "header pointer leave",
+            evt.target,
+            evt.currentTarget,
+            evt.eventPhase
+          )
+        }
         onPointerOut={(evt) =>
           console.log(
             "header pointer out",
@@ -134,7 +126,6 @@ export function App() {
             console.log("text doubleclick", { ...evt });
             evt.stopPropagation();
           }}
-          // onPointerMove={(evt) => console.log("text pointer move")}
           onPointerOver={(evt) =>
             console.log(
               "text pointer over",
@@ -143,30 +134,22 @@ export function App() {
               evt.eventPhase
             )
           }
-          // onPointerEnterCapture={(evt) =>
-          //   console.log(
-          //     "text pointer enter capture",
-          //     evt.target,
-          //     evt.currentTarget,
-          //     evt.eventPhase
-          //   )
-          // }
-          // onPointerEnter={(evt) =>
-          //   console.log(
-          //     "text pointer enter",
-          //     evt.target,
-          //     evt.currentTarget,
-          //     evt.eventPhase
-          //   )
-          // }
-          // onPointerLeave={(evt) =>
-          //   console.log(
-          //     "text pointer leave",
-          //     evt.target,
-          //     evt.currentTarget,
-          //     evt.eventPhase
-          //   )
-          // }
+          onPointerEnter={(evt) =>
+            console.log(
+              "text pointer enter",
+              evt.target,
+              evt.currentTarget,
+              evt.eventPhase
+            )
+          }
+          onPointerLeave={(evt) =>
+            console.log(
+              "text pointer leave",
+              evt.target,
+              evt.currentTarget,
+              evt.eventPhase
+            )
+          }
           onPointerOut={(evt) =>
             console.log(
               "text pointer out",
@@ -189,12 +172,12 @@ export function App() {
             onPointerOver={(evt) =>
               console.log("button pointer over", evt.target, evt.currentTarget)
             }
-            // onPointerEnter={(evt) =>
-            //   console.log("button pointer enter", evt.target, evt.currentTarget)
-            // }
-            // onPointerLeave={(evt) =>
-            //   console.log("button pointer leave", evt.target, evt.currentTarget)
-            // }
+            onPointerEnter={(evt) =>
+              console.log("button pointer enter", evt.target, evt.currentTarget)
+            }
+            onPointerLeave={(evt) =>
+              console.log("button pointer leave", evt.target, evt.currentTarget)
+            }
             onPointerOut={(evt) =>
               console.log("button pointer out", evt.target, evt.currentTarget)
             }
@@ -246,8 +229,8 @@ function useIsOver() {
   const [isOver, setIsOver] = React.useState(false);
   return {
     isOver,
-    onPointerOver: () => setIsOver(true),
-    onPointerOut: () => setIsOver(false),
+    onPointerEnter: () => setIsOver(true),
+    onPointerLeave: () => setIsOver(false),
   };
 }
 
