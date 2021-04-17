@@ -127,6 +127,11 @@ export class CanvasRenderer extends HasChildren {
     this._handleEvent(evt, "onWheel");
   };
 
+  _onContextMenu = (evt: MouseEvent) => {
+    evt.stopPropagation();
+    evt.preventDefault();
+  };
+
   _addOrRemoveListeners(add: boolean) {
     let fn = add
       ? this.canvas.addEventListener
@@ -137,6 +142,7 @@ export class CanvasRenderer extends HasChildren {
     fn("pointerleave", this._onPointerLeave);
     fn("wheel", this._onWheel);
     fn("click", this._onClick);
+    fn("contextmenu", this._onContextMenu);
   }
 
   _handleEvent(evt: MouseEvent, eventName: RCF.MouseEventType): void;
