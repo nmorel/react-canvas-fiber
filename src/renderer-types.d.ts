@@ -53,6 +53,8 @@ declare global {
 
       canvasX: number;
       canvasY: number;
+      pointerX: number;
+      pointerY: number;
     };
     type PointerEvent<T extends View = View> = Event<
       globalThis.PointerEvent,
