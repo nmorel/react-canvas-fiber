@@ -23,6 +23,10 @@ export class Store {
     this.height = height;
   }
 
+  setSceneTransformMatrix(matrix: Store["sceneTransformMatrix"]) {
+    this.sceneTransformMatrix = matrix;
+  }
+
   loadItems() {
     this.items.push(
       new TextItem({

@@ -283,6 +283,7 @@ export class CanvasRenderer extends HasChildren {
     target: View,
     pointer: { x: number; y: number }
   ): RCF.Event<Event, View> {
+    const { left, top } = this.canvas.getBoundingClientRect();
     const {
       type,
       target: nativeTarget,
@@ -312,8 +313,10 @@ export class CanvasRenderer extends HasChildren {
       stopPropagation() {
         this.isPropagationStopped = true;
       },
-      canvasX: pointer.x,
-      canvasY: pointer.y,
+      canvasX: evt.clientX - left,
+      canvasY: evt.clientY - top,
+      pointerX: pointer.x,
+      pointerY: pointer.y,
     };
   }
 
