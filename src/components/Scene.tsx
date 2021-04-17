@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import React from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Store } from "../models/store";
 import { useStore } from "../useStore";
 import { round } from "lodash-es";
@@ -10,11 +10,11 @@ export const Scene = observer(function Scene({
   children: React.ReactNode;
 }) {
   const store = useStore();
-  return (
-    <c-view
-      width={store.width}
-      height={store.height}
-      onWheel={(evt) => {
+  const panRef = useRef<{ lastX: number; lastY: number } | null>(null);
+
+  const listeners = useMemo(
+    () => ({
+      onWheel: (evt: RCF.WheelEvent) => {
         const delta = evt.nativeEvent.deltaY;
         let newScale = store.sceneTransformMatrix[0];
         if (delta > 0 && newScale > 0.01) {
@@ -57,9 +57,46 @@ export const Scene = observer(function Scene({
         newMatrix[4] = Math.round(evt.canvasX - positionNewZoom.x);
         newMatrix[5] = Math.round(evt.canvasY - positionNewZoom.y);
         store.setSceneTransformMatrix(newMatrix);
-      }}
+      },
+      onPointerDown: (evt: RCF.PointerEvent) => {
+        panRef.current = {
+          lastX: evt.pointerX,
+          lastY: evt.pointerY,
+        };
+      },
+      onPointerMove: (evt: RCF.PointerEvent) => {
+        if (!panRef.current) return;
+
+        const deltaX = evt.pointerX - panRef.current.lastX;
+        const deltaY = evt.pointerY - panRef.current.lastY;
+
+        const newMatrix: Store["sceneTransformMatrix"] = [
+          ...store.sceneTransformMatrix,
+        ];
+        newMatrix[4] += deltaX;
+        newMatrix[5] += deltaY;
+        store.setSceneTransformMatrix(newMatrix);
+
+        panRef.current = {
+          lastX: evt.pointerX,
+          lastY: evt.pointerY,
+        };
+      },
+      onPointerUp: () => {
+        panRef.current = null;
+      },
+    }),
+    [store]
+  );
+
+  return (
+    <c-view
+      width={store.width / store.sceneTransformMatrix[0]}
+      height={store.height / store.sceneTransformMatrix[3]}
+      transformMatrix={store.sceneTransformMatrix}
+      {...listeners}
     >
-      <c-view transformMatrix={store.sceneTransformMatrix}>{children}</c-view>
+      {children}
     </c-view>
   );
 });

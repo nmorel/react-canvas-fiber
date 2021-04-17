@@ -7,6 +7,7 @@ import { Scene } from "./components/Scene";
 import { Item } from "./components/Item";
 import { Store } from "./models/store";
 import { useSingleton } from "./hooks/useSingleton";
+import { identityMatrix } from "./constants/defaultValues";
 
 export const App = observer(function App() {
   const store = useSingleton(() => new Store());
@@ -43,8 +44,23 @@ export const App = observer(function App() {
           flexDirection: "column",
         }}
       >
-        <header style={{ flex: "none", position: "relative" }}>
-          <h1 style={{ background: "red", margin: 0 }}>Test !</h1>
+        <header
+          style={{
+            flex: "none",
+            position: "relative",
+            background: "red",
+            display: "flex",
+            padding: 5,
+          }}
+        >
+          <h1 style={{ background: "red", margin: 0, flex: 1 }}>Test !</h1>
+          <button
+            type="button"
+            style={{ margin: 5 }}
+            onClick={() => store.setSceneTransformMatrix(identityMatrix)}
+          >
+            Reset position
+          </button>
         </header>
         <main
           ref={refContainer}
