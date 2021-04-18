@@ -90,8 +90,8 @@ function useCanvasListeners(
         const newMatrix: Store["sceneTransformMatrix"] = [
           ...store.sceneTransformMatrix,
         ];
-        newMatrix[4] += deltaX;
-        newMatrix[5] += deltaY;
+        newMatrix[4] = Math.round(newMatrix[4] + deltaX);
+        newMatrix[5] = Math.round(newMatrix[5] + deltaY);
         store.setSceneTransformMatrix(newMatrix);
 
         panRef.current = {

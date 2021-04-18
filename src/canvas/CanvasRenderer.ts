@@ -4,6 +4,7 @@ import { difference, intersection } from "lodash-es";
 import { newTextBreaker } from "../utils/text-breaker";
 import type { TextBreaker } from "../utils/text-breaker";
 import { defaultBounds, identityMatrix } from "../constants/defaultValues";
+import { createOffscreenCanvas } from "../utils/createOffscreenCanvas";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -19,6 +20,8 @@ export class CanvasRenderer extends HasChildren {
     height: number;
   } & RCF.Handlers;
 
+  private prevTransformMatrix: typeof identityMatrix = identityMatrix;
+  private prevBounds = defaultBounds;
   private bounds = defaultBounds;
 
   private forcedTarget: RCF.Target | null = null;
@@ -30,6 +33,7 @@ export class CanvasRenderer extends HasChildren {
 
   private assetsLoaded = false;
   private requestingDraw = false;
+  private redrawReasons = new Set<"full" | "vpt">();
 
   constructor(canvas: HTMLCanvasElement, props: CanvasRenderer["props"]) {
     super();
@@ -65,16 +69,20 @@ export class CanvasRenderer extends HasChildren {
     this.canvas.width = this.containerWidth * this.scaleRatio;
     this.canvas.height = this.containerHeight * this.scaleRatio;
 
-    this.updateBounds();
-  }
-
-  updateTransformMatrix(transformMatrix: typeof identityMatrix) {
-    this.props.transformMatrix = transformMatrix;
-    this.updateBounds();
+    this._updateBounds();
     this.requestDraw();
   }
 
-  updateBounds() {
+  updateTransformMatrix(transformMatrix: typeof identityMatrix) {
+    this.prevTransformMatrix = this.props.transformMatrix;
+    this.props.transformMatrix = transformMatrix;
+    this._updateBounds();
+    this.requestDraw("vpt");
+  }
+
+  _updateBounds() {
+    this.prevBounds = this.bounds;
+
     const left = -this.props.transformMatrix[4] / this.props.transformMatrix[0];
     const top = -this.props.transformMatrix[5] / this.props.transformMatrix[3];
     const right = left + this.props.width / this.props.transformMatrix[0];
@@ -89,7 +97,7 @@ export class CanvasRenderer extends HasChildren {
     };
   }
 
-  requestDraw() {
+  requestDraw(reason: "full" | "vpt" = "full") {
     if (!this.requestingDraw) {
       Promise.resolve().then(() => {
         if (this.requestingDraw) {
@@ -97,6 +105,7 @@ export class CanvasRenderer extends HasChildren {
         }
       });
     }
+    this.redrawReasons.add(reason);
     this.requestingDraw = true;
   }
 
@@ -109,8 +118,21 @@ export class CanvasRenderer extends HasChildren {
       return;
     }
 
+    if (this.redrawReasons.size === 1 && this.redrawReasons.has("vpt")) {
+      // Partial redraw
+      this.partialDraw();
+    } else {
+      // Full redraw
+      this.fullDraw();
+    }
     this.requestingDraw = false;
-    // console.log("drawing canvas");
+    this.redrawReasons.clear();
+  }
+
+  private fullDraw() {
+    this.bufferCanvas = null;
+    this.bufferContext = null;
+
     const ctx = this.context;
     ctx.clearRect(
       0,
@@ -124,20 +146,112 @@ export class CanvasRenderer extends HasChildren {
 
     this.children.forEach((child) => {
       child.recomputeLayoutIfDirty();
-
-      if (
-        child.bounds.width > 0 &&
-        child.bounds.height > 0 &&
-        child.bounds.right >= this.bounds.left &&
-        child.bounds.left <= this.bounds.right &&
-        child.bounds.bottom >= this.bounds.top &&
-        child.bounds.top <= this.bounds.bottom
-      ) {
+      if (this.isChildVisible(child, this.bounds)) {
         child.render(ctx);
       }
     });
 
     ctx.restore();
+  }
+
+  private bufferCanvas: OffscreenCanvas | HTMLCanvasElement | null = null;
+  private bufferContext:
+    | OffscreenCanvasRenderingContext2D
+    | CanvasRenderingContext2D
+    | null = null;
+
+  private partialDraw() {
+    // Draw previous content into buffer at current vpt transform
+    const { width, height, transformMatrix } = this.props;
+    const { prevTransformMatrix, bounds, prevBounds } = this;
+    console.log({
+      width,
+      height,
+      transformMatrix,
+      prevTransformMatrix,
+      bounds,
+      prevBounds,
+    });
+    if (this.bufferCanvas && this.bufferContext) {
+      this.bufferContext.clearRect(0, 0, width, height);
+    } else {
+      this.bufferCanvas = createOffscreenCanvas(width, height);
+      this.bufferContext = this.bufferCanvas.getContext("2d", { alpha: true })!;
+    }
+
+    this.bufferContext.save();
+
+    this.bufferContext.setTransform(...transformMatrix);
+
+    this.children.forEach((child) => {
+      child.recomputeLayoutIfDirty();
+      if (
+        !this.isChildInside(child, prevBounds) &&
+        this.isChildVisible(child, bounds)
+      ) {
+        child.render(this.bufferContext!);
+      }
+    });
+
+    const diffScale = transformMatrix[0] / prevTransformMatrix[0];
+    this.bufferContext.setTransform(
+      diffScale,
+      0,
+      0,
+      diffScale,
+      transformMatrix[4] - prevTransformMatrix[4] * diffScale,
+      transformMatrix[5] - prevTransformMatrix[5] * diffScale
+    );
+    this.bufferContext.clearRect(0, 0, width, height);
+    this.bufferContext.drawImage(
+      this.canvas,
+      0,
+      0,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height
+    );
+
+    this.context.clearRect(0, 0, width, height);
+    this.context.drawImage(
+      this.bufferCanvas,
+      0,
+      0,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height
+    );
+
+    this.bufferContext.restore();
+    this.bufferContext.clearRect(0, 0, width, height);
+  }
+
+  private isChildVisible(child: View, bounds: typeof defaultBounds) {
+    return (
+      child.bounds.width > 0 &&
+      child.bounds.height > 0 &&
+      child.bounds.right >= bounds.left &&
+      child.bounds.left <= bounds.right &&
+      child.bounds.bottom >= bounds.top &&
+      child.bounds.top <= bounds.bottom
+    );
+  }
+
+  private isChildInside(child: View, bounds: typeof defaultBounds) {
+    return (
+      child.bounds.width > 0 &&
+      child.bounds.height > 0 &&
+      child.bounds.right <= bounds.right &&
+      child.bounds.left >= bounds.left &&
+      child.bounds.bottom <= bounds.bottom &&
+      child.bounds.top >= bounds.top
+    );
   }
 
   _onPointerDown = (evt: PointerEvent) => {

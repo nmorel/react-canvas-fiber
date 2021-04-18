@@ -330,7 +330,7 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     };
   }
 
-  render(ctx: CanvasRenderingContext2D) {
+  render(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
     ctx.save();
 
     if (this.props.transformMatrix) {
@@ -444,7 +444,9 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     ctx.restore();
   }
 
-  renderContent(ctx: CanvasRenderingContext2D) {}
+  renderContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ) {}
 
   addChild(child: View) {
     super.addChild(child);
@@ -503,7 +505,9 @@ export class Text extends View<TextProps> {
     }
   }
 
-  renderContent(ctx: CanvasRenderingContext2D) {
+  renderContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ) {
     ctx.textBaseline = "top";
     ctx.fillStyle = this.props.color ?? "black";
     ctx.font = this.fontStyle;
@@ -596,7 +600,9 @@ export type ImageProps = ImageStyleProps &
   };
 
 export class Image extends View<ImageProps> {
-  renderContent(ctx: CanvasRenderingContext2D) {
+  renderContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ) {
     const cw = this.node.getComputedWidth();
     const ch = this.node.getComputedHeight();
     const ratioContainer = cw / ch;
