@@ -7,6 +7,7 @@ import { Item } from "./components/Item";
 import { Store } from "./models/store";
 import { useSingleton } from "./hooks/useSingleton";
 import { identityMatrix } from "./constants/defaultValues";
+import { FpsCounter } from "./components/FpsCounter";
 
 export const App = observer(function App() {
   const store = useSingleton(() => new Store());
@@ -47,12 +48,16 @@ export const App = observer(function App() {
           style={{
             flex: "none",
             position: "relative",
-            background: "red",
+            background: "#FAB3A9",
             display: "flex",
             padding: 5,
+            alignItems: "center",
           }}
         >
-          <h1 style={{ background: "red", margin: 0, flex: 1 }}>Test !</h1>
+          <h1 style={{ margin: 0, flex: 1 }}>Canvas</h1>
+          <h3 style={{ margin: 0 }}>
+            <FpsCounter />
+          </h3>
           <button
             type="button"
             style={{ margin: 5 }}
