@@ -51,7 +51,7 @@ import {
   TextStyleProps,
   ViewStyleProps,
 } from "./Style";
-import type { TextBreaker } from "./text-breaker";
+import type { TextBreaker } from "../utils/text-breaker";
 
 const flexDirectionToYoga: Record<
   Exclude<ViewProps["flexDirection"], undefined>,

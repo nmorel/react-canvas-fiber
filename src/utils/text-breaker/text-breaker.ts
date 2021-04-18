@@ -1,6 +1,6 @@
 import _ from "lodash";
 
-import { createOffscreenCanvas } from "../utils/createOffscreenCanvas";
+import { createOffscreenCanvas } from "../createOffscreenCanvas";
 
 import {
   findNextGraphemeBreak,

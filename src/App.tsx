@@ -1,6 +1,6 @@
 import * as React from "react";
 import ResizeObserver from "resize-observer-polyfill";
-import { Canvas } from "./Canvas";
+import { Canvas } from "./components/Canvas";
 import { StoreContext } from "./useStore";
 import { observer } from "mobx-react";
 import { Item } from "./components/Item";

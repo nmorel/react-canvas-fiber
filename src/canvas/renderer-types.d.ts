@@ -1,8 +1,4 @@
-import React, {
-  PointerEvent as ReactPointerEvent,
-  ReactNode,
-  Ref,
-} from "react";
+import { ReactNode, Ref } from "react";
 import { CanvasRenderer } from "./CanvasRenderer";
 import {
   ViewProps,

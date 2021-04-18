@@ -5,13 +5,13 @@ import {
   useRef,
   useMemo,
 } from "react";
-import { CanvasRenderer } from "./CanvasRenderer";
-import { render } from "./ReactCanvasReconciler";
-import { StoreContext, useStore } from "./useStore";
+import { CanvasRenderer } from "../canvas/CanvasRenderer";
+import { render } from "../canvas/ReactCanvasReconciler";
+import { StoreContext, useStore } from "../useStore";
 import { observer } from "mobx-react";
 import * as React from "react";
 import { round } from "lodash-es";
-import { Store } from "./models/store";
+import { Store } from "../models/store";
 
 const CanvasContext = createContext<CanvasRenderer>(null as any);
 

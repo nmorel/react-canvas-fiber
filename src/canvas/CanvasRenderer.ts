@@ -1,9 +1,9 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
 import { difference, intersection } from "lodash-es";
-import { newTextBreaker } from "./text-breaker";
-import type { TextBreaker } from "./text-breaker";
-import { identityMatrix } from "./constants/defaultValues";
+import { newTextBreaker } from "../utils/text-breaker";
+import type { TextBreaker } from "../utils/text-breaker";
+import { identityMatrix } from "../constants/defaultValues";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;

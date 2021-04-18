@@ -1,8 +1,8 @@
-import { action, makeAutoObservable, makeObservable, observable } from "mobx";
+import { makeAutoObservable, makeObservable, observable } from "mobx";
 import { identityMatrix } from "../constants/defaultValues";
 import { IItem, ImageItem, TextItem } from "./item";
-import largeImagePlaceholder from "../react.png";
-import largeImage from "../large_image_original.jpeg";
+import largeImagePlaceholder from "../assets/react.png";
+import largeImage from "../assets/large_image_original.jpeg";
 
 export class Store {
   width: number = 0;
