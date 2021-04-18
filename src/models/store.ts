@@ -49,7 +49,7 @@ export class Store {
         scale: 1.5,
         color: "red",
         placeholderUrl: largeImagePlaceholder,
-        imageUrl: largeImage,
+        imageUrl: largeImagePlaceholder,
       })
     );
   }

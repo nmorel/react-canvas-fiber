@@ -3,7 +3,6 @@ import ResizeObserver from "resize-observer-polyfill";
 import { Canvas } from "./Canvas";
 import { StoreContext } from "./useStore";
 import { observer } from "mobx-react";
-import { Scene } from "./components/Scene";
 import { Item } from "./components/Item";
 import { Store } from "./models/store";
 import { useSingleton } from "./hooks/useSingleton";
@@ -67,29 +66,10 @@ export const App = observer(function App() {
           style={{ display: "flex", flex: "1", position: "relative" }}
         >
           {!!store.width && !!store.height && (
-            <Canvas
-              width={store.width}
-              height={store.height}
-              style={{ userSelect: "none" }}
-              onClick={(ev) => {
-                ev.preventDefault();
-                store.items[0].set({
-                  color: store.items[0].color === "blue" ? "green" : "blue",
-                });
-                store.items[1].set({
-                  left:
-                    store.items[1].left > 200 ? 50 : store.items[1].left + 10,
-                });
-              }}
-            >
-              {/* Have to repeat the provider here because we lost context by changing reconciler */}
-              <StoreContext.Provider value={store}>
-                <Scene>
-                  {store.items.map((item) => (
-                    <Item key={item.id} item={item} />
-                  ))}
-                </Scene>
-              </StoreContext.Provider>
+            <Canvas>
+              {store.items.map((item) => (
+                <Item key={item.id} item={item} />
+              ))}
             </Canvas>
           )}
         </main>

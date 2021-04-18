@@ -3,6 +3,7 @@ import { View, ViewProps } from "./YogaComponents";
 import { difference, intersection } from "lodash-es";
 import { newTextBreaker } from "./text-breaker";
 import type { TextBreaker } from "./text-breaker";
+import { identityMatrix } from "./constants/defaultValues";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -12,28 +13,33 @@ export class CanvasRenderer extends HasChildren {
   scaleRatio = 1;
   textBreaker: TextBreaker | null = null;
 
+  props: {
+    transformMatrix: typeof identityMatrix;
+    width: number;
+    height: number;
+  } & RCF.Handlers;
+
   private lastClickEvents: Map<
-    View,
+    RCF.Target,
     { detail: number; timestamp: number }
   > = new Map();
-  private lastHoveredTargets: View[] = [];
+  private lastHoveredTargets: RCF.Target[] = [];
 
   private assetsLoaded = false;
   private requestingDraw = false;
 
-  constructor(
-    canvas: HTMLCanvasElement,
-    options: { width: number; height: number }
-  ) {
+  constructor(canvas: HTMLCanvasElement, props: CanvasRenderer["props"]) {
     super();
 
     this.canvas = canvas;
+    this.props = props;
+
     const context = canvas.getContext("2d", { alpha: true });
     if (!context) {
       throw new Error(`Can't create a 2d context on canvas`);
     }
     this.context = context;
-    this.updateDimensions(options);
+    this.updateDimensions();
     this._addOrRemoveListeners(true);
 
     newTextBreaker().then((textBreaker) => {
@@ -45,7 +51,8 @@ export class CanvasRenderer extends HasChildren {
     });
   }
 
-  updateDimensions({ width, height }: { width: number; height: number }) {
+  updateDimensions() {
+    const { width, height } = this.props;
     this.containerWidth = width;
     this.containerHeight = height;
     this.canvas.style.width = `${width}px`;
@@ -73,7 +80,7 @@ export class CanvasRenderer extends HasChildren {
     }
 
     this.requestingDraw = false;
-    console.log("drawing canvas");
+    // console.log("drawing canvas");
     const ctx = this.context;
     ctx.clearRect(
       0,
@@ -83,7 +90,7 @@ export class CanvasRenderer extends HasChildren {
     );
 
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(...this.props.transformMatrix);
 
     this.children.forEach((child) => child.render(ctx));
 
@@ -108,11 +115,20 @@ export class CanvasRenderer extends HasChildren {
 
   _onPointerLeave = (evt: PointerEvent) => {
     const pointer = this._convertEvtPointer(evt);
+    const transformedPointer = this._normalizePoint(
+      pointer,
+      this.props.transformMatrix
+    );
     if (this.lastHoveredTargets.length) {
       const lastHoveredTarget = this.lastHoveredTargets[
         this.lastHoveredTargets.length - 1
       ];
-      let customEvent = this._createEvent(evt, lastHoveredTarget, pointer);
+      let customEvent = this._createEvent(
+        evt,
+        lastHoveredTarget,
+        pointer,
+        transformedPointer
+      );
       customEvent.type = "pointerout";
       this._callHandlers(this.lastHoveredTargets, customEvent, "onPointerOut");
     }
@@ -153,9 +169,20 @@ export class CanvasRenderer extends HasChildren {
     eventName: RCF.EventType
   ): void {
     const pointer = this._convertEvtPointer(evt);
-    const targets: View[] = [];
+    const invertedScale = 1 / this.props.transformMatrix[0];
+    const transformedPointer = {
+      x:
+        invertedScale * pointer.x -
+        this.props.transformMatrix[4] * invertedScale,
+      y:
+        invertedScale * pointer.y -
+        this.props.transformMatrix[5] * invertedScale,
+    };
+    const targets: RCF.Target[] = [this];
     for (let i = this.children.length - 1; i >= 0; i--) {
-      if (this._findTargetOnView(this.children[i], pointer, targets)) {
+      if (
+        this._findTargetOnView(this.children[i], transformedPointer, targets)
+      ) {
         break;
       }
     }
@@ -171,7 +198,12 @@ export class CanvasRenderer extends HasChildren {
         const lastHoveredTarget = this.lastHoveredTargets[
           this.lastHoveredTargets.length - 1
         ];
-        let customEvent = this._createEvent(evt, lastHoveredTarget, pointer);
+        let customEvent = this._createEvent(
+          evt,
+          lastHoveredTarget,
+          pointer,
+          transformedPointer
+        );
         customEvent.type = "pointerout";
         this._callHandlers(
           this.lastHoveredTargets,
@@ -189,7 +221,8 @@ export class CanvasRenderer extends HasChildren {
         let customEvent = this._createEvent(
           evt,
           targetsNoLongerHovered[targetsNoLongerHovered.length - 1],
-          pointer
+          pointer,
+          transformedPointer
         );
         customEvent.type = "pointerleave";
         targetsNoLongerHovered.reverse();
@@ -207,7 +240,8 @@ export class CanvasRenderer extends HasChildren {
         let customEvent = this._createEvent(
           evt,
           targetsNewlyHovered[targetsNewlyHovered.length - 1],
-          pointer
+          pointer,
+          transformedPointer
         );
         customEvent.type = "pointerenter";
         this._callHandlers(
@@ -221,7 +255,12 @@ export class CanvasRenderer extends HasChildren {
       // pointerover
       if (targets.length) {
         const newHoveredTarget = targets[targets.length - 1];
-        let customEvent = this._createEvent(evt, newHoveredTarget, pointer);
+        let customEvent = this._createEvent(
+          evt,
+          newHoveredTarget,
+          pointer,
+          transformedPointer
+        );
         customEvent.type = "pointerover";
         this._callHandlers(targets, customEvent, "onPointerOver");
       }
@@ -235,9 +274,14 @@ export class CanvasRenderer extends HasChildren {
 
     const target = targets[targets.length - 1];
 
-    let customEvent = this._createEvent(evt, target, pointer);
+    let customEvent = this._createEvent(
+      evt,
+      target,
+      pointer,
+      transformedPointer
+    );
 
-    let doubleTapTargets: View[] | undefined;
+    let doubleTapTargets: RCF.Target[] | undefined;
     if (eventName === "onTap") {
       doubleTapTargets = [];
       for (const target of targets) {
@@ -262,7 +306,7 @@ export class CanvasRenderer extends HasChildren {
     this._callHandlers(targets, customEvent, eventName);
 
     if (doubleTapTargets?.length) {
-      customEvent = this._createEvent(evt, target, pointer);
+      customEvent = this._createEvent(evt, target, pointer, transformedPointer);
       customEvent.type = "dblclick";
       this._callHandlers(doubleTapTargets, customEvent, "onDoubleTap");
     }
@@ -280,10 +324,10 @@ export class CanvasRenderer extends HasChildren {
 
   _createEvent<Event extends PointerEvent | MouseEvent | WheelEvent>(
     evt: Event,
-    target: View,
-    pointer: { x: number; y: number }
-  ): RCF.Event<Event, View> {
-    const { left, top } = this.canvas.getBoundingClientRect();
+    target: RCF.Target,
+    pointer: { x: number; y: number },
+    transformedPointer: { x: number; y: number }
+  ): RCF.Event<Event> {
     const {
       type,
       target: nativeTarget,
@@ -313,16 +357,16 @@ export class CanvasRenderer extends HasChildren {
       stopPropagation() {
         this.isPropagationStopped = true;
       },
-      canvasX: evt.clientX - left,
-      canvasY: evt.clientY - top,
-      pointerX: pointer.x,
-      pointerY: pointer.y,
+      canvasX: pointer.x,
+      canvasY: pointer.y,
+      pointerX: transformedPointer.x,
+      pointerY: transformedPointer.y,
     };
   }
 
   _callHandlers(
-    targets: View[],
-    customEvent: RCF.Event<any, any>,
+    targets: RCF.Target[],
+    customEvent: RCF.Event<any>,
     eventName: RCF.EventType,
     bubbles = true
   ) {
@@ -398,7 +442,7 @@ export class CanvasRenderer extends HasChildren {
   _findTargetOnView(
     view: View,
     pointer: { x: number; y: number },
-    targets: View[]
+    targets: RCF.Target[]
   ): boolean {
     pointer = this._normalizePoint(pointer, view.props.transformMatrix);
     if (

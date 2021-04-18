@@ -3,6 +3,7 @@ import React, {
   ReactNode,
   Ref,
 } from "react";
+import { CanvasRenderer } from "./CanvasRenderer";
 import {
   ViewProps,
   TextProps,
@@ -19,12 +20,12 @@ type CanvasElement<T extends View> = {
 
 declare global {
   namespace RCF {
+    type Target = CanvasRenderer | View;
     type Event<
       NativeEvent extends
         | globalThis.MouseEvent
         | globalThis.PointerEvent
-        | globalThis.WheelEvent,
-      T extends View = View
+        | globalThis.WheelEvent
     > = Omit<
       NativeEvent,
       | "type"
@@ -38,8 +39,8 @@ declare global {
     > & {
       nativeEvent: NativeEvent;
       type: string;
-      target: T;
-      currentTarget: T;
+      target: Target;
+      currentTarget: Target;
 
       eventPhase: number;
 
@@ -56,12 +57,9 @@ declare global {
       pointerX: number;
       pointerY: number;
     };
-    type PointerEvent<T extends View = View> = Event<
-      globalThis.PointerEvent,
-      T
-    >;
-    type MouseEvent<T extends View = View> = Event<globalThis.MouseEvent, T>;
-    type WheelEvent<T extends View = View> = Event<globalThis.WheelEvent, T>;
+    type PointerEvent = Event<globalThis.PointerEvent>;
+    type MouseEvent = Event<globalThis.MouseEvent>;
+    type WheelEvent = Event<globalThis.WheelEvent>;
 
     type PointerEventType =
       | "onPointerDown"
@@ -77,22 +75,18 @@ declare global {
     type Handlers = {
       [Event in
         | PointerEventType
-        | `${PointerEventType}Capture` as `${Event}`]?: <T extends View = View>(
-        evt: RCF.PointerEvent<T>
+        | `${PointerEventType}Capture` as `${Event}`]?: (
+        evt: RCF.PointerEvent
       ) => void;
     } &
       {
-        [Event in MouseEventType | `${MouseEventType}Capture` as `${Event}`]?: <
-          T extends View = View
-        >(
-          evt: RCF.MouseEvent<T>
+        [Event in MouseEventType | `${MouseEventType}Capture` as `${Event}`]?: (
+          evt: RCF.MouseEvent
         ) => void;
       } &
       {
-        [Event in WheelEventType | `${WheelEventType}Capture` as `${Event}`]?: <
-          T extends View = View
-        >(
-          evt: RCF.WheelEvent<T>
+        [Event in WheelEventType | `${WheelEventType}Capture` as `${Event}`]?: (
+          evt: RCF.WheelEvent
         ) => void;
       };
   }
