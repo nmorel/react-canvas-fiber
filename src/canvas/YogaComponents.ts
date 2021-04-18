@@ -52,6 +52,7 @@ import {
   ViewStyleProps,
 } from "./Style";
 import type { TextBreaker } from "../utils/text-breaker";
+import { defaultBounds, identityMatrix } from "../constants/defaultValues";
 
 const flexDirectionToYoga: Record<
   Exclude<ViewProps["flexDirection"], undefined>,
@@ -141,6 +142,7 @@ export type ViewProps = ViewStyleProps & RCF.Handlers;
 export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   container: CanvasRenderer;
   node: YogaNode;
+  bounds = defaultBounds;
   props: Props;
 
   constructor(props: Props, container: CanvasRenderer) {
@@ -300,11 +302,35 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D) {
-    if (this.node.isDirty()) {
-      this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
-    }
+  recomputeLayoutIfDirty() {
+    if (!this.node.isDirty()) return;
 
+    this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
+
+    const childMatrix = this.props.transformMatrix || identityMatrix;
+    const left = childMatrix[4];
+    const top = childMatrix[5];
+    const childWidth = this.node.getComputedWidth();
+    const childHeight = this.node.getComputedHeight();
+    const right =
+      childMatrix[0] * childWidth +
+      childMatrix[2] * childHeight +
+      childMatrix[4];
+    const bottom =
+      childMatrix[1] * childWidth +
+      childMatrix[3] * childHeight +
+      childMatrix[5];
+    this.bounds = {
+      left,
+      top,
+      right,
+      bottom,
+      width: right - left,
+      height: bottom - top,
+    };
+  }
+
+  render(ctx: CanvasRenderingContext2D) {
     ctx.save();
 
     if (this.props.transformMatrix) {

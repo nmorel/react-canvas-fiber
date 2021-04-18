@@ -7,7 +7,7 @@ export abstract class Item {
   top: number = 0;
   width: number = 300;
   scale: number = 1;
-  color: string = "yellow";
+  color: string = "#7FB285";
 
   constructor({ id, ...rest }: Partial<Item>) {
     this.id = id || uuidv4();

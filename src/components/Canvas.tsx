@@ -19,7 +19,9 @@ export function useCanvas() {
   return useContext(CanvasContext);
 }
 
-function useCanvasListeners(): RCF.Handlers {
+function useCanvasListeners(
+  canvasRendererRef: React.MutableRefObject<CanvasRenderer | null | undefined>
+): RCF.Handlers {
   const store = useStore();
   const panRef = useRef<{ lastX: number; lastY: number } | null>(null);
 
@@ -77,6 +79,7 @@ function useCanvasListeners(): RCF.Handlers {
           lastX: evt.canvasX,
           lastY: evt.canvasY,
         };
+        canvasRendererRef.current?.forceEventsTarget(canvasRendererRef.current);
       },
       onPointerMove: (evt: RCF.PointerEvent) => {
         if (!panRef.current) return;
@@ -98,6 +101,7 @@ function useCanvasListeners(): RCF.Handlers {
       },
       onPointerUp: () => {
         panRef.current = null;
+        canvasRendererRef.current?.forceEventsTarget(null);
       },
     }),
     [store]
@@ -113,7 +117,7 @@ export const Canvas = observer(function Canvas({
   const { width, height, sceneTransformMatrix } = store;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<CanvasRenderer | null>();
-  const listeners = useCanvasListeners();
+  const listeners = useCanvasListeners(rendererRef);
 
   useLayoutEffect(() => {
     if (!rendererRef.current) return;
@@ -126,8 +130,7 @@ export const Canvas = observer(function Canvas({
   useLayoutEffect(() => {
     if (!rendererRef.current) return;
 
-    rendererRef.current.props.transformMatrix = sceneTransformMatrix;
-    rendererRef.current.requestDraw();
+    rendererRef.current?.updateTransformMatrix(sceneTransformMatrix);
   }, [sceneTransformMatrix]);
 
   useLayoutEffect(() => {

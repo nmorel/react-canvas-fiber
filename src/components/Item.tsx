@@ -16,9 +16,9 @@ export const Item = observer(function Item({ item }: { item: IItem }) {
       left={0}
       width={width}
       minHeight={120}
-      borderColor={isOver ? "blue" : "red"}
+      borderColor={isOver ? "#FAB3A9" : "#C6AD94"}
       borderWidth={2}
-      backgroundColor="yellow"
+      backgroundColor="#C6AD94"
       justifyContent="center"
       transformMatrix={[scale, 0, 0, scale, left, top]}
       padding={20}
@@ -64,7 +64,7 @@ export const Item = observer(function Item({ item }: { item: IItem }) {
             color="white"
             fontSize={24}
             fontFamily={"Helvetica Neue"}
-            textAlign={"justify"}
+            textAlign={"center"}
             padding={12}
           />
         )}

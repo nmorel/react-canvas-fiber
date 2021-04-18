@@ -3,7 +3,7 @@ import { View, ViewProps } from "./YogaComponents";
 import { difference, intersection } from "lodash-es";
 import { newTextBreaker } from "../utils/text-breaker";
 import type { TextBreaker } from "../utils/text-breaker";
-import { identityMatrix } from "../constants/defaultValues";
+import { defaultBounds, identityMatrix } from "../constants/defaultValues";
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -19,6 +19,9 @@ export class CanvasRenderer extends HasChildren {
     height: number;
   } & RCF.Handlers;
 
+  private bounds = defaultBounds;
+
+  private forcedTarget: RCF.Target | null = null;
   private lastClickEvents: Map<
     RCF.Target,
     { detail: number; timestamp: number }
@@ -61,6 +64,29 @@ export class CanvasRenderer extends HasChildren {
     this.scaleRatio = window.devicePixelRatio || 1;
     this.canvas.width = this.containerWidth * this.scaleRatio;
     this.canvas.height = this.containerHeight * this.scaleRatio;
+
+    this.updateBounds();
+  }
+
+  updateTransformMatrix(transformMatrix: typeof identityMatrix) {
+    this.props.transformMatrix = transformMatrix;
+    this.updateBounds();
+    this.requestDraw();
+  }
+
+  updateBounds() {
+    const left = -this.props.transformMatrix[4] / this.props.transformMatrix[0];
+    const top = -this.props.transformMatrix[5] / this.props.transformMatrix[3];
+    const right = left + this.props.width / this.props.transformMatrix[0];
+    const bottom = top + this.props.height / this.props.transformMatrix[3];
+    this.bounds = {
+      left,
+      top,
+      right,
+      bottom,
+      width: right - left,
+      height: bottom - top,
+    };
   }
 
   requestDraw() {
@@ -72,6 +98,10 @@ export class CanvasRenderer extends HasChildren {
       });
     }
     this.requestingDraw = true;
+  }
+
+  forceEventsTarget(target: RCF.Target | null) {
+    this.forcedTarget = target;
   }
 
   private draw() {
@@ -92,7 +122,20 @@ export class CanvasRenderer extends HasChildren {
     ctx.save();
     ctx.setTransform(...this.props.transformMatrix);
 
-    this.children.forEach((child) => child.render(ctx));
+    this.children.forEach((child) => {
+      child.recomputeLayoutIfDirty();
+
+      if (
+        child.bounds.width > 0 &&
+        child.bounds.height > 0 &&
+        child.bounds.right >= this.bounds.left &&
+        child.bounds.left <= this.bounds.right &&
+        child.bounds.bottom >= this.bounds.top &&
+        child.bounds.top <= this.bounds.bottom
+      ) {
+        child.render(ctx);
+      }
+    });
 
     ctx.restore();
   }
@@ -114,24 +157,23 @@ export class CanvasRenderer extends HasChildren {
   };
 
   _onPointerLeave = (evt: PointerEvent) => {
-    const pointer = this._convertEvtPointer(evt);
-    const transformedPointer = this._normalizePoint(
-      pointer,
-      this.props.transformMatrix
-    );
-    if (this.lastHoveredTargets.length) {
-      const lastHoveredTarget = this.lastHoveredTargets[
-        this.lastHoveredTargets.length - 1
-      ];
-      let customEvent = this._createEvent(
-        evt,
-        lastHoveredTarget,
-        pointer,
-        transformedPointer
-      );
-      customEvent.type = "pointerout";
-      this._callHandlers(this.lastHoveredTargets, customEvent, "onPointerOut");
+    if (!this.lastHoveredTargets.length || this.forcedTarget) {
+      return;
     }
+
+    const pointer = this._convertEvtPointer(evt);
+    const transformedPointer = this._convertPointerToCanvasCoordinates(pointer);
+    const lastHoveredTarget = this.lastHoveredTargets[
+      this.lastHoveredTargets.length - 1
+    ];
+    let customEvent = this._createEvent(
+      evt,
+      lastHoveredTarget,
+      pointer,
+      transformedPointer
+    );
+    customEvent.type = "pointerout";
+    this._callHandlers(this.lastHoveredTargets, customEvent, "onPointerOut");
     this.lastHoveredTargets = [];
   };
 
@@ -169,25 +211,29 @@ export class CanvasRenderer extends HasChildren {
     eventName: RCF.EventType
   ): void {
     const pointer = this._convertEvtPointer(evt);
-    const invertedScale = 1 / this.props.transformMatrix[0];
-    const transformedPointer = {
-      x:
-        invertedScale * pointer.x -
-        this.props.transformMatrix[4] * invertedScale,
-      y:
-        invertedScale * pointer.y -
-        this.props.transformMatrix[5] * invertedScale,
-    };
-    const targets: RCF.Target[] = [this];
-    for (let i = this.children.length - 1; i >= 0; i--) {
-      if (
-        this._findTargetOnView(this.children[i], transformedPointer, targets)
-      ) {
-        break;
+    const transformedPointer = this._convertPointerToCanvasCoordinates(pointer);
+
+    const forcedTarget =
+      this.forcedTarget || (eventName === "onWheel" ? this : null);
+
+    let targets: RCF.Target[];
+    if (forcedTarget) {
+      targets = [forcedTarget];
+    } else {
+      targets = [this];
+      for (let i = this.children.length - 1; i >= 0; i--) {
+        if (
+          this._findTargetOnView(this.children[i], transformedPointer, targets)
+        ) {
+          break;
+        }
       }
     }
 
-    if (eventName === "onPointerMove" || eventName === "onPointerDown") {
+    if (
+      !forcedTarget &&
+      (eventName === "onPointerMove" || eventName === "onPointerDown")
+    ) {
       // pointerout
       if (
         this.lastHoveredTargets.length &&
@@ -268,10 +314,6 @@ export class CanvasRenderer extends HasChildren {
       this.lastHoveredTargets = targets;
     }
 
-    if (!targets.length) {
-      return;
-    }
-
     const target = targets[targets.length - 1];
 
     let customEvent = this._createEvent(
@@ -319,6 +361,14 @@ export class CanvasRenderer extends HasChildren {
     return {
       x: evt.clientX - left,
       y: evt.clientY - top,
+    };
+  }
+
+  _convertPointerToCanvasCoordinates({ x, y }: { x: number; y: number }) {
+    const invertedScale = 1 / this.props.transformMatrix[0];
+    return {
+      x: invertedScale * x - this.props.transformMatrix[4] * invertedScale,
+      y: invertedScale * y - this.props.transformMatrix[5] * invertedScale,
     };
   }
 
