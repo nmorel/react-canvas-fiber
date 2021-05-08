@@ -156,6 +156,11 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   }
 
   update(props: Props) {
+    let child: View = this;
+    while (child.parent && this.container !== child.parent) {
+      child = child.parent as View;
+    }
+    this.container.requestDraw("child", child);
     this.props = props;
     this.layout();
   }

@@ -15,9 +15,7 @@ export const Item = observer(function Item({ item }: { item: IItem }) {
       left={0}
       width={width}
       minHeight={120}
-      borderColor={isOver ? "black" : "#C6AD94"}
-      borderWidth={4}
-      backgroundColor="#C6AD94"
+      backgroundColor={isOver ? "#FAB3A9" : "#C6AD94"}
       justifyContent="center"
       transformMatrix={[scale, 0, 0, scale, left, top]}
       padding={20}
@@ -35,7 +33,7 @@ export const Item = observer(function Item({ item }: { item: IItem }) {
       <Pastille />
       <c-view
         flex={1}
-        backgroundColor={color}
+        backgroundColor={isOver ? "#C6AD94" : color}
         justifyContent="center"
         alignItems="center"
         borderRadius={10}

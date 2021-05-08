@@ -1,10 +1,39 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
-import { difference, intersection } from "lodash-es";
+import { difference, intersection, debounce } from "lodash-es";
 import { newTextBreaker } from "../utils/text-breaker";
 import type { TextBreaker } from "../utils/text-breaker";
 import { defaultBounds, identityMatrix } from "../constants/defaultValues";
 import { createOffscreenCanvas } from "../utils/createOffscreenCanvas";
+
+function mergeBounds(...bounds: Array<typeof defaultBounds>) {
+  let left = +Infinity;
+  let top = +Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+
+  bounds.forEach((bound) => {
+    if (!bound.width || !bound.height) return;
+
+    left = Math.min(bound.left, left);
+    top = Math.min(bound.top, top);
+    right = Math.max(bound.right, right);
+    bottom = Math.max(bound.bottom, bottom);
+  });
+
+  if (!Number.isFinite(left)) {
+    return defaultBounds;
+  }
+
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: right - left,
+    height: bottom - top,
+  };
+}
 
 export class CanvasRenderer extends HasChildren {
   canvas: HTMLCanvasElement;
@@ -33,7 +62,7 @@ export class CanvasRenderer extends HasChildren {
 
   private assetsLoaded = false;
   private requestingDraw = false;
-  private redrawReasons = new Set<"full" | "vpt">();
+  private redrawReasons = new Map<"full" | "vpt" | "child", Set<View> | null>();
 
   constructor(canvas: HTMLCanvasElement, props: CanvasRenderer["props"]) {
     super();
@@ -97,7 +126,12 @@ export class CanvasRenderer extends HasChildren {
     };
   }
 
-  requestDraw(reason: "full" | "vpt" = "full") {
+  debouncedFullRedraw = debounce(() => this.requestDraw(), 500);
+
+  requestDraw(): void;
+  requestDraw(reason: "vpt"): void;
+  requestDraw(reason: "child", child: View): void;
+  requestDraw(reason: "full" | "vpt" | "child" = "full", child?: View): void {
     if (!this.requestingDraw) {
       Promise.resolve().then(() => {
         if (this.requestingDraw) {
@@ -105,7 +139,19 @@ export class CanvasRenderer extends HasChildren {
         }
       });
     }
-    this.redrawReasons.add(reason);
+    if (reason === "child") {
+      let prevChilds = this.redrawReasons.get("child");
+      if (!prevChilds) {
+        prevChilds = new Set();
+        this.redrawReasons.set("child", prevChilds);
+      }
+      prevChilds.add(child!);
+    } else {
+      this.redrawReasons.set(reason, null);
+      if (reason === "full") {
+        this.debouncedFullRedraw.cancel();
+      }
+    }
     this.requestingDraw = true;
   }
 
@@ -118,12 +164,12 @@ export class CanvasRenderer extends HasChildren {
       return;
     }
 
-    if (this.redrawReasons.size === 1 && this.redrawReasons.has("vpt")) {
-      // Partial redraw
-      this.partialDraw();
-    } else {
+    if (this.redrawReasons.has("full")) {
       // Full redraw
       this.fullDraw();
+    } else {
+      // Partial redraw
+      this.partialDraw(this.redrawReasons.get("child"));
     }
     this.requestingDraw = false;
     this.redrawReasons.clear();
@@ -160,7 +206,7 @@ export class CanvasRenderer extends HasChildren {
     | CanvasRenderingContext2D
     | null = null;
 
-  private partialDraw() {
+  private partialDraw(childsToRedraw?: Set<View> | null) {
     // Draw previous content into buffer at current vpt transform
     const { width, height, transformMatrix } = this.props;
     const { prevTransformMatrix, bounds, prevBounds } = this;
@@ -175,17 +221,35 @@ export class CanvasRenderer extends HasChildren {
 
     this.bufferContext.setTransform(...transformMatrix);
 
+    const boundsToRedraw = childsToRedraw
+      ? mergeBounds(
+          ...[...childsToRedraw]
+            .map((child) => {
+              const prevBounds = child.bounds;
+              child.recomputeLayoutIfDirty();
+              return [prevBounds, child.bounds];
+            })
+            .flat()
+        )
+      : null;
+
     this.children.forEach((child) => {
       child.recomputeLayoutIfDirty();
       if (
-        !this.isChildInside(child, prevBounds) &&
-        this.isChildVisible(child, bounds)
+        childsToRedraw?.has(child) ||
+        (boundsToRedraw && this.isChildVisible(child, boundsToRedraw)) ||
+        (prevBounds !== bounds &&
+          !this.isChildInside(child, prevBounds) &&
+          this.isChildVisible(child, bounds))
       ) {
         child.render(this.bufferContext!);
       }
     });
 
     const diffScale = transformMatrix[0] / prevTransformMatrix[0];
+    if (diffScale !== 1) {
+      this.debouncedFullRedraw();
+    }
     this.bufferContext.setTransform(
       diffScale,
       0,
@@ -194,7 +258,30 @@ export class CanvasRenderer extends HasChildren {
       transformMatrix[4] - prevTransformMatrix[4] * diffScale,
       transformMatrix[5] - prevTransformMatrix[5] * diffScale
     );
-    this.bufferContext.clearRect(0, 0, width, height);
+    if (boundsToRedraw) {
+      const tl = this._transformPoint(
+        { x: boundsToRedraw.left, y: boundsToRedraw.top },
+        transformMatrix
+      );
+      tl.x = Math.max(0, tl.x);
+      tl.y = Math.max(0, tl.y);
+      const br = this._transformPoint(
+        { x: boundsToRedraw.right, y: boundsToRedraw.bottom },
+        transformMatrix
+      );
+      br.x = Math.min(width, br.x);
+      br.y = Math.min(height, br.y);
+
+      // Have to clear the bufferContext around the boundsToRedraw
+      this.bufferContext.clearRect(0, 0, tl.x, height);
+      this.bufferContext.clearRect(0, 0, width, tl.y);
+      this.bufferContext.clearRect(br.x, 0, width, height);
+      this.bufferContext.clearRect(0, br.y, width, height);
+      // Have to clear the context of the boundsToRedraw
+      this.context.clearRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+    } else {
+      this.bufferContext.clearRect(0, 0, width, height);
+    }
     this.bufferContext.drawImage(
       this.canvas,
       0,
@@ -222,6 +309,9 @@ export class CanvasRenderer extends HasChildren {
 
     this.bufferContext.restore();
     this.bufferContext.clearRect(0, 0, width, height);
+
+    this.prevTransformMatrix = this.props.transformMatrix;
+    this.prevBounds = this.bounds;
   }
 
   private isChildVisible(child: View, bounds: typeof defaultBounds) {
@@ -634,6 +724,18 @@ export class CanvasRenderer extends HasChildren {
     };
   }
 
+  _transformPoint(
+    p: { x: number; y: number },
+    t: ViewProps["transformMatrix"]
+  ): { x: number; y: number } {
+    if (!t) return p;
+
+    return {
+      x: t[0] * p.x + t[2] * p.y + t[4],
+      y: t[1] * p.x + t[3] * p.y + t[5],
+    };
+  }
+
   removeListenersFromView(view: View) {
     this.lastClickEvents.delete(view);
     this.lastHoveredTargets = this.lastHoveredTargets.filter((v) => v !== view);
@@ -641,6 +743,7 @@ export class CanvasRenderer extends HasChildren {
 
   dispose() {
     this._addOrRemoveListeners(false);
+    this.debouncedFullRedraw.cancel();
     this.requestingDraw = false;
   }
 }

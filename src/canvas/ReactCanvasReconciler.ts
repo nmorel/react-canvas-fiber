@@ -138,7 +138,7 @@ let Renderer = Reconciler<
     // noop
   },
   resetAfterCommit(container) {
-    container.requestDraw();
+    // noop
   },
   clearContainer() {
     // noop
