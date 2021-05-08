@@ -1,4 +1,3 @@
-import { createAsset } from "use-asset";
 import * as React from "react";
 import { IItem } from "../models/item";
 import { useIsOver } from "../hooks/useIsOver";
@@ -16,8 +15,8 @@ export const Item = observer(function Item({ item }: { item: IItem }) {
       left={0}
       width={width}
       minHeight={120}
-      borderColor={isOver ? "#FAB3A9" : "#C6AD94"}
-      borderWidth={2}
+      borderColor={isOver ? "black" : "#C6AD94"}
+      borderWidth={4}
       backgroundColor="#C6AD94"
       justifyContent="center"
       transformMatrix={[scale, 0, 0, scale, left, top]}

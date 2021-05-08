@@ -476,9 +476,13 @@ export type TextProps = TextStyleProps &
 
 export class Text extends View<TextProps> {
   wrappedText: ReturnType<TextBreaker["breakText"]> | null = null;
+  fontSize: number = 16;
+  lineHeight: number = 16;
+  fontStyle: string = "16px sans-serif";
 
   constructor(props: TextProps, container: CanvasRenderer) {
     super(props, container);
+    this.computeProperties();
     this.node.setMeasureFunc(
       (width, widthMeasureMode, height, heightMeasureMode) => {
         if (!container.textBreaker) return { width: 0, height: 0 };
@@ -497,20 +501,67 @@ export class Text extends View<TextProps> {
     );
   }
 
+  computeProperties() {
+    this.fontSize = this.props.fontSize || 16;
+    this.lineHeight = this.props.lineHeight || this.fontSize;
+    this.fontStyle = `${this.fontSize}px ${
+      this.props.fontFamily || "sans-serif"
+    }`;
+  }
+
   update(props: TextProps) {
     const prevProps = this.props;
     super.update(props);
-    if (prevProps.text !== this.props.text) {
+    this.computeProperties();
+    if (
+      prevProps.text !== this.props.text ||
+      prevProps.fontSize !== this.props.fontSize ||
+      prevProps.lineHeight !== this.props.lineHeight ||
+      prevProps.fontFamily !== this.props.fontFamily
+    ) {
       this.node.markDirty();
     }
   }
 
+  private renderText = (
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    text: string,
+    left: number,
+    top: number,
+    width: number
+  ) => {
+    ctx.fillText(text, left, top);
+  };
+
+  private renderPlaceholder = (
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    text: string,
+    left: number,
+    top: number,
+    width: number
+  ) => {
+    ctx.fillRect(left, top, width, this.lineHeight * 0.8);
+  };
+
   renderContent(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
   ) {
-    ctx.textBaseline = "top";
-    ctx.fillStyle = this.props.color ?? "black";
-    ctx.font = this.fontStyle;
+    let renderText = this.renderText;
+    let textAlign = this.props.textAlign;
+
+    const { a: scaleX, d: scaleY } = ctx.getTransform();
+    if (Math.min(scaleX, scaleY) * this.fontSize <= 4) {
+      ctx.fillStyle = this.props.color ?? "black";
+      ctx.globalAlpha = 0.5;
+      renderText = this.renderPlaceholder;
+      if (textAlign === "justify") {
+        textAlign = "left";
+      }
+    } else {
+      ctx.textBaseline = "top";
+      ctx.fillStyle = this.props.color ?? "black";
+      ctx.font = this.fontStyle;
+    }
 
     this.wrappedText?.forEach(({ text, width }, index) => {
       let left =
@@ -520,7 +571,7 @@ export class Text extends View<TextProps> {
         this.node.getComputedPadding(EDGE_TOP) +
         this.lineHeight * index;
 
-      switch (this.props.textAlign) {
+      switch (textAlign) {
         case "center":
           left +=
             (this.node.getComputedWidth() -
@@ -528,7 +579,7 @@ export class Text extends View<TextProps> {
               this.node.getComputedPadding(EDGE_RIGHT) -
               width) /
             2;
-          ctx.fillText(text, left, top);
+          renderText(ctx, text, left, top, width);
           break;
         case "right":
           left +=
@@ -536,7 +587,7 @@ export class Text extends View<TextProps> {
             this.node.getComputedPadding(EDGE_LEFT) -
             this.node.getComputedPadding(EDGE_RIGHT) -
             width;
-          ctx.fillText(text, left, top);
+          renderText(ctx, text, left, top, width);
           break;
         case "justify": {
           let availableWidth =
@@ -545,14 +596,14 @@ export class Text extends View<TextProps> {
             this.node.getComputedPadding(EDGE_RIGHT) -
             width;
           if (!availableWidth) {
-            ctx.fillText(text, left, top);
+            renderText(ctx, text, left, top, width);
             break;
           }
 
           const space = "\u0020";
           const words = text.split(space);
           if (words.length <= 1) {
-            ctx.fillText(text, left, top);
+            renderText(ctx, text, left, top, width);
             break;
           }
 
@@ -565,7 +616,7 @@ export class Text extends View<TextProps> {
             if (index) {
               left += spacingBetweenEachWord;
             }
-            ctx.fillText(word, left, top);
+            renderText(ctx, word, left, top, width);
             left +=
               this.container.textBreaker?.measureText(word, this.fontStyle) ??
               0;
@@ -575,22 +626,10 @@ export class Text extends View<TextProps> {
         case "auto":
         case "left":
         default:
-          ctx.fillText(text, left, top);
+          renderText(ctx, text, left, top, width);
           break;
       }
     });
-  }
-
-  private get fontSize() {
-    return this.props.fontSize || 16;
-  }
-
-  private get lineHeight() {
-    return this.props.lineHeight || this.fontSize;
-  }
-
-  private get fontStyle() {
-    return `${this.fontSize}px ${this.props.fontFamily || "sans-serif"}`;
   }
 }
 

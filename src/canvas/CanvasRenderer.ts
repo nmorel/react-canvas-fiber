@@ -164,14 +164,6 @@ export class CanvasRenderer extends HasChildren {
     // Draw previous content into buffer at current vpt transform
     const { width, height, transformMatrix } = this.props;
     const { prevTransformMatrix, bounds, prevBounds } = this;
-    console.log({
-      width,
-      height,
-      transformMatrix,
-      prevTransformMatrix,
-      bounds,
-      prevBounds,
-    });
     if (this.bufferCanvas && this.bufferContext) {
       this.bufferContext.clearRect(0, 0, width, height);
     } else {
