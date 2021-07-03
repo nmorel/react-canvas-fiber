@@ -42,7 +42,7 @@ import {
   ALIGN_SPACE_AROUND,
   YogaEdge,
   DIRECTION_LTR,
-} from "yoga-layout-prebuilt";
+} from "@react-pdf/yoga";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { HasChildren } from "./HasChildren";
 import {
