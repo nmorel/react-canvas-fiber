@@ -94,7 +94,7 @@ export class CanvasRenderer extends HasChildren {
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
 
-    this.scaleRatio = window.devicePixelRatio || 1;
+    this.scaleRatio = 1; // window.devicePixelRatio || 1;
     this.canvas.width = this.containerWidth * this.scaleRatio;
     this.canvas.height = this.containerHeight * this.scaleRatio;
 

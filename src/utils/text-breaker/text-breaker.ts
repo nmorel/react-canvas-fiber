@@ -1,5 +1,4 @@
-import _ from "lodash";
-
+import { memoize } from "lodash-es";
 import { createOffscreenCanvas } from "../createOffscreenCanvas";
 
 import {
@@ -16,14 +15,14 @@ const MULTIPLE_SPACE_REGEX = new RegExp(`${SPACE}(${SPACE})+`, "g");
 export class TextBreaker {
   private lineBreakTrie: UnicodeTrie;
 
-  private getMeasurementContext = _.memoize((fontStyle: string) => {
+  private getMeasurementContext = memoize((fontStyle: string) => {
     const canvas = createOffscreenCanvas(100, 100);
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) {
       throw new Error("Could not instantiate a canvas");
     }
     ctx.font = fontStyle;
-    return _.memoize((string: string) => ctx.measureText(string).width);
+    return memoize((string: string) => ctx.measureText(string).width);
   });
 
   constructor(lineBreakClassesBuffer: Uint8Array) {
