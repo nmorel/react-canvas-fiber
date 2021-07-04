@@ -432,8 +432,12 @@ export type ShadowProps = {
   shadowRadius?: number;
 };
 
-export type ViewStyleProps = LayoutProps &
-  TransformProps &
+export type BaseStyleProps = LayoutProps &
+  TransformProps & {
+    opacity?: number;
+  };
+
+export type ViewStyleProps = BaseStyleProps &
   ShadowProps & {
     backgroundColor?: ColorValue;
     borderColor?: ColorValue;
@@ -452,7 +456,6 @@ export type ViewStyleProps = LayoutProps &
     // borderLeftWidth?: number;
     // borderRightWidth?: number;
     // borderTopWidth?: number;
-    opacity?: number;
   };
 
 export type FontWeight =

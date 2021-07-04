@@ -2,26 +2,33 @@ import Reconciler from "react-reconciler";
 import { unstable_now as now } from "scheduler";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { HasChildren } from "./HasChildren";
-import { Image, Text, View } from "./YogaComponents";
+import {
+  BaseElement,
+  Image,
+  Svg,
+  SvgChild,
+  Text,
+  View,
+} from "./YogaComponents";
 
 const roots = new Map<CanvasRenderer, Reconciler.FiberRoot>();
 
-function appendChild(parentInstance: HasChildren, child: View) {
+function appendChild(parentInstance: HasChildren, child: BaseElement) {
   parentInstance?.addChild(child);
 }
 
 function insertBefore(
   parentInstance: HasChildren,
-  child: View,
-  beforeChild: View
+  child: BaseElement,
+  beforeChild: BaseElement
 ) {
   parentInstance?.insertChildBefore(child, beforeChild);
 }
 
-function removeChild(parentInstance: HasChildren, child: View) {
+function removeChild(parentInstance: HasChildren, child: BaseElement) {
   parentInstance?.removeChild(child);
   child.destroy();
-  child.container.removeListenersFromView(child);
+  child.container.removeListenersFromElement(child);
 }
 
 type Props = JSX.IntrinsicElements["c-view"] & {
@@ -29,14 +36,14 @@ type Props = JSX.IntrinsicElements["c-view"] & {
 };
 
 let Renderer = Reconciler<
-  "c-view" | "c-text" | "c-image",
+  "c-view" | "c-text" | "c-image" | "c-svg" | "path",
   Props,
   CanvasRenderer,
-  View,
+  BaseElement,
   undefined,
   unknown,
   undefined,
-  View | null | undefined,
+  BaseElement | null | undefined,
   undefined,
   Partial<Props>,
   unknown,
@@ -54,6 +61,12 @@ let Renderer = Reconciler<
       }
       case "c-image": {
         return new Image(props as any, container);
+      }
+      case "c-svg": {
+        return new Svg(props as any, container);
+      }
+      case "path": {
+        return new SvgChild(props as any, container);
       }
       default:
         throw new Error(`unknown type ${type}`);

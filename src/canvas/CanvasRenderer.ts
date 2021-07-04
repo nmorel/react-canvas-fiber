@@ -1,5 +1,5 @@
 import { HasChildren } from "./HasChildren";
-import { View, ViewProps } from "./YogaComponents";
+import { BaseElement, BaseElementProps } from "./YogaComponents";
 import { difference, intersection, debounce } from "lodash-es";
 import { newTextBreaker } from "../utils/text-breaker";
 import type { TextBreaker } from "../utils/text-breaker";
@@ -62,7 +62,10 @@ export class CanvasRenderer extends HasChildren {
 
   private assetsLoaded = false;
   private requestingDraw = false;
-  private redrawReasons = new Map<"full" | "vpt" | "child", Set<View> | null>();
+  private redrawReasons = new Map<
+    "full" | "vpt" | "child",
+    Set<BaseElement> | null
+  >();
 
   constructor(canvas: HTMLCanvasElement, props: CanvasRenderer["props"]) {
     super();
@@ -130,8 +133,11 @@ export class CanvasRenderer extends HasChildren {
 
   requestDraw(): void;
   requestDraw(reason: "vpt"): void;
-  requestDraw(reason: "child", child: View): void;
-  requestDraw(reason: "full" | "vpt" | "child" = "full", child?: View): void {
+  requestDraw(reason: "child", child: BaseElement): void;
+  requestDraw(
+    reason: "full" | "vpt" | "child" = "full",
+    child?: BaseElement
+  ): void {
     if (!this.requestingDraw) {
       Promise.resolve().then(() => {
         if (this.requestingDraw) {
@@ -206,7 +212,7 @@ export class CanvasRenderer extends HasChildren {
     | CanvasRenderingContext2D
     | null = null;
 
-  private partialDraw(childsToRedraw?: Set<View> | null) {
+  private partialDraw(childsToRedraw?: Set<BaseElement> | null) {
     // Draw previous content into buffer at current vpt transform
     const { width, height, transformMatrix } = this.props;
     const { prevTransformMatrix, bounds, prevBounds } = this;
@@ -314,7 +320,7 @@ export class CanvasRenderer extends HasChildren {
     this.prevBounds = this.bounds;
   }
 
-  private isChildVisible(child: View, bounds: typeof defaultBounds) {
+  private isChildVisible(child: BaseElement, bounds: typeof defaultBounds) {
     return (
       child.bounds.width > 0 &&
       child.bounds.height > 0 &&
@@ -325,7 +331,7 @@ export class CanvasRenderer extends HasChildren {
     );
   }
 
-  private isChildInside(child: View, bounds: typeof defaultBounds) {
+  private isChildInside(child: BaseElement, bounds: typeof defaultBounds) {
     return (
       child.bounds.width > 0 &&
       child.bounds.height > 0 &&
@@ -419,7 +425,11 @@ export class CanvasRenderer extends HasChildren {
       targets = [this];
       for (let i = this.children.length - 1; i >= 0; i--) {
         if (
-          this._findTargetOnView(this.children[i], transformedPointer, targets)
+          this._findTargetOnElement(
+            this.children[i],
+            transformedPointer,
+            targets
+          )
         ) {
           break;
         }
@@ -618,15 +628,15 @@ export class CanvasRenderer extends HasChildren {
   ) {
     if (!bubbles) {
       customEvent.eventPhase = 3;
-      for (const view of targets) {
-        const handler = view.props[eventName] as (
+      for (const targetElement of targets) {
+        const handler = targetElement.props[eventName] as (
           evt: typeof customEvent
         ) => void | undefined;
         if (handler) {
-          customEvent.currentTarget = view;
+          customEvent.currentTarget = targetElement;
           customEvent.detail =
             eventName === "onTap"
-              ? this.lastClickEvents.get(view)?.detail || 1
+              ? this.lastClickEvents.get(targetElement)?.detail || 1
               : eventName === "onDoubleTap"
               ? 2
               : 0;
@@ -641,15 +651,15 @@ export class CanvasRenderer extends HasChildren {
 
     // Capture phase
     customEvent.eventPhase = 1;
-    for (const view of targets) {
-      const handler = view.props[`${eventName}Capture` as const] as (
+    for (const targetElement of targets) {
+      const handler = targetElement.props[`${eventName}Capture` as const] as (
         evt: typeof customEvent
       ) => void | undefined;
       if (handler) {
-        customEvent.currentTarget = view;
+        customEvent.currentTarget = targetElement;
         customEvent.detail =
           eventName === "onTap"
-            ? this.lastClickEvents.get(view)?.detail || 1
+            ? this.lastClickEvents.get(targetElement)?.detail || 1
             : eventName === "onDoubleTap"
             ? 2
             : 0;
@@ -665,15 +675,15 @@ export class CanvasRenderer extends HasChildren {
     // Bubbling phase
     customEvent.eventPhase = 3;
     for (let i = targets.length - 1; i >= 0; i--) {
-      const view = targets[i];
-      const handler = view.props[eventName] as (
+      const targetElement = targets[i];
+      const handler = targetElement.props[eventName] as (
         evt: typeof customEvent
       ) => void | undefined;
       if (handler) {
-        customEvent.currentTarget = view;
+        customEvent.currentTarget = targetElement;
         customEvent.detail =
           eventName === "onTap"
-            ? this.lastClickEvents.get(view)?.detail || 1
+            ? this.lastClickEvents.get(targetElement)?.detail || 1
             : eventName === "onDoubleTap"
             ? 2
             : 0;
@@ -685,24 +695,26 @@ export class CanvasRenderer extends HasChildren {
     }
   }
 
-  _findTargetOnView(
-    view: View,
+  _findTargetOnElement(
+    element: BaseElement,
     pointer: { x: number; y: number },
     targets: RCF.Target[]
   ): boolean {
-    pointer = this._normalizePoint(pointer, view.props.transformMatrix);
+    pointer = this._normalizePoint(pointer, element.props.transformMatrix);
     if (
-      pointer.x < view.node.getComputedLeft() ||
-      pointer.x > view.node.getComputedLeft() + view.node.getComputedWidth() ||
-      pointer.y < view.node.getComputedTop() ||
-      pointer.y > view.node.getComputedTop() + view.node.getComputedHeight()
+      pointer.x < element.node.getComputedLeft() ||
+      pointer.x >
+        element.node.getComputedLeft() + element.node.getComputedWidth() ||
+      pointer.y < element.node.getComputedTop() ||
+      pointer.y >
+        element.node.getComputedTop() + element.node.getComputedHeight()
     ) {
       return false;
     }
 
-    targets.push(view);
-    for (let i = view.children.length - 1; i >= 0; i--) {
-      if (this._findTargetOnView(view.children[i], pointer, targets)) {
+    targets.push(element);
+    for (let i = element.children.length - 1; i >= 0; i--) {
+      if (this._findTargetOnElement(element.children[i], pointer, targets)) {
         break;
       }
     }
@@ -711,7 +723,7 @@ export class CanvasRenderer extends HasChildren {
 
   _normalizePoint(
     pointer: { x: number; y: number },
-    matrix: ViewProps["transformMatrix"]
+    matrix: BaseElementProps["transformMatrix"]
   ) {
     if (!matrix) return pointer;
 
@@ -726,7 +738,7 @@ export class CanvasRenderer extends HasChildren {
 
   _transformPoint(
     p: { x: number; y: number },
-    t: ViewProps["transformMatrix"]
+    t: BaseElementProps["transformMatrix"]
   ): { x: number; y: number } {
     if (!t) return p;
 
@@ -736,9 +748,11 @@ export class CanvasRenderer extends HasChildren {
     };
   }
 
-  removeListenersFromView(view: View) {
-    this.lastClickEvents.delete(view);
-    this.lastHoveredTargets = this.lastHoveredTargets.filter((v) => v !== view);
+  removeListenersFromElement(element: BaseElement) {
+    this.lastClickEvents.delete(element);
+    this.lastHoveredTargets = this.lastHoveredTargets.filter(
+      (v) => v !== element
+    );
   }
 
   dispose() {

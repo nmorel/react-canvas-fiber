@@ -7,16 +7,19 @@ import {
   View,
   Image,
   Text,
+  BaseElement,
+  SvgProps,
+  Svg,
 } from "./YogaComponents";
 
-type CanvasElement<T extends View> = {
+type CanvasElement<T extends BaseElement> = {
   ref?: Ref<T>;
   children?: ReactNode;
 } & RCF.Handlers;
 
 declare global {
   namespace RCF {
-    type Target = CanvasRenderer | View;
+    type Target = CanvasRenderer | BaseElement;
     type Event<
       NativeEvent extends
         | globalThis.MouseEvent
@@ -91,6 +94,7 @@ declare global {
       "c-view": ViewProps & CanvasElement<View>;
       "c-text": TextProps & CanvasElement<Text>;
       "c-image": ImageProps & CanvasElement<Image>;
+      "c-svg": SvgProps & CanvasElement<Svg>;
     }
   }
 }

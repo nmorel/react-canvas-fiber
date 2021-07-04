@@ -48,6 +48,7 @@ import { HasChildren } from "./HasChildren";
 import {
   DimensionValue,
   ImageStyleProps,
+  BaseStyleProps,
   TextStyleProps,
   ViewStyleProps,
 } from "./Style";
@@ -137,9 +138,11 @@ const alignContentToYoga: Record<
   "space-around": ALIGN_SPACE_AROUND,
 };
 
-export type ViewProps = ViewStyleProps & RCF.Handlers;
+export type BaseElementProps = BaseStyleProps & RCF.Handlers;
 
-export class View<Props extends ViewProps = ViewProps> extends HasChildren {
+export abstract class BaseElement<
+  Props extends BaseElementProps = BaseElementProps
+> extends HasChildren {
   container: CanvasRenderer;
   node: YogaNode;
   bounds = defaultBounds;
@@ -156,9 +159,9 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   }
 
   update(props: Props) {
-    let child: View = this;
+    let child: BaseElement = this;
     while (child.parent && this.container !== child.parent) {
-      child = child.parent as View;
+      child = child.parent as BaseElement;
     }
     this.container.requestDraw("child", child);
     this.props = props;
@@ -312,19 +315,19 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
 
     this.node.calculateLayout(void 0, void 0, DIRECTION_LTR);
 
-    const childMatrix = this.props.transformMatrix || identityMatrix;
-    const left = childMatrix[4];
-    const top = childMatrix[5];
-    const childWidth = this.node.getComputedWidth();
-    const childHeight = this.node.getComputedHeight();
+    const transformMatrix = this.props.transformMatrix || identityMatrix;
+    const left = transformMatrix[4];
+    const top = transformMatrix[5];
+    const width = this.node.getComputedWidth();
+    const height = this.node.getComputedHeight();
     const right =
-      childMatrix[0] * childWidth +
-      childMatrix[2] * childHeight +
-      childMatrix[4];
+      transformMatrix[0] * width +
+      transformMatrix[2] * height +
+      transformMatrix[4];
     const bottom =
-      childMatrix[1] * childWidth +
-      childMatrix[3] * childHeight +
-      childMatrix[5];
+      transformMatrix[1] * width +
+      transformMatrix[3] * height +
+      transformMatrix[5];
     this.bounds = {
       left,
       top,
@@ -346,6 +349,45 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
       ctx.globalAlpha = this.props.opacity;
     }
 
+    this.renderStyleAndContent(ctx);
+
+    // Move the current transform to match padding/margin so children can start at pos (0, 0)
+    if (
+      this.children.length &&
+      (this.node.getComputedLeft() || this.node.getComputedTop())
+    ) {
+      ctx.transform(
+        1,
+        0,
+        0,
+        1,
+        this.node.getComputedLeft(),
+        this.node.getComputedTop()
+      );
+    }
+
+    this.children.forEach((child) => child.render(ctx));
+
+    ctx.restore();
+  }
+
+  abstract renderStyleAndContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ): void;
+
+  destroy() {
+    // noop
+  }
+}
+
+export type ViewProps = ViewStyleProps & RCF.Handlers;
+
+export class View<
+  Props extends ViewProps = ViewProps
+> extends BaseElement<Props> {
+  renderStyleAndContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ) {
     const borderTopLeftRadius =
       this.props.borderTopLeftRadius || this.props.borderRadius;
     const borderTopRightRadius =
@@ -428,25 +470,6 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
     }
 
     this.renderContent(ctx);
-
-    // Move the current transform to match padding/margin so children can start at pos (0, 0)
-    if (
-      this.children.length &&
-      (this.node.getComputedLeft() || this.node.getComputedTop())
-    ) {
-      ctx.transform(
-        1,
-        0,
-        0,
-        1,
-        this.node.getComputedLeft(),
-        this.node.getComputedTop()
-      );
-    }
-
-    this.children.forEach((child) => child.render(ctx));
-
-    ctx.restore();
   }
 
   renderContent(
@@ -467,10 +490,6 @@ export class View<Props extends ViewProps = ViewProps> extends HasChildren {
   removeChild(child: View) {
     super.removeChild(child);
     this.node.removeChild(child.node);
-  }
-
-  destroy() {
-    // noop
   }
 }
 
@@ -670,5 +689,48 @@ export class Image extends View<ImageProps> {
       dw,
       dh
     );
+  }
+}
+
+export type SvgProps = BaseStyleProps & RCF.Handlers;
+
+export class Svg extends BaseElement<SvgProps> {
+  renderStyleAndContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ): void {
+    // no-op
+  }
+}
+
+type SvgChildProps = Record<string, any>;
+export class SvgChild extends HasChildren {
+  container: CanvasRenderer;
+  node: YogaNode;
+  bounds = defaultBounds;
+  props: SvgChildProps;
+
+  constructor(props: SvgChildProps, container: CanvasRenderer) {
+    super();
+    this.container = container;
+    this.props = props;
+  }
+
+  update(props: SvgChildProps) {
+    if (this.parent) {
+      let child = this.parent as BaseElement;
+      while (child.parent && this.container !== child.parent) {
+        child = child.parent as BaseElement;
+      }
+      this.container.requestDraw("child", child);
+    }
+    this.props = props;
+  }
+
+  render(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
+    console.log("render svg child", this.props);
+  }
+
+  destroy() {
+    // noop
   }
 }
