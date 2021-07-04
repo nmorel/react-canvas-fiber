@@ -1,13 +1,13 @@
 import { action, makeObservable, observable } from "mobx";
+import { SVGPathData } from "svg-pathdata";
+import { SVGCommand } from "svg-pathdata/lib/types";
 import { v4 as uuidv4 } from "uuid";
 
 export abstract class Item {
   id: string;
   left: number = 0;
   top: number = 0;
-  width: number = 300;
   scale: number = 1;
-  color: string = "#7FB285";
 
   constructor({ id, ...rest }: Partial<Item>) {
     this.id = id || uuidv4();
@@ -17,9 +17,7 @@ export abstract class Item {
       id: observable,
       left: observable,
       top: observable,
-      width: observable,
       scale: observable,
-      color: observable,
       set: action,
     });
   }
@@ -28,12 +26,27 @@ export abstract class Item {
     Object.assign(this, data);
   }
 }
+export abstract class BasicItem extends Item {
+  width: number;
+  color: string;
 
-export class TextItem extends Item {
+  constructor({ width = 300, color = "#7FB285", ...rest }: Partial<BasicItem>) {
+    super(rest);
+    this.width = width;
+    this.color = color;
+
+    makeObservable(this, {
+      width: observable,
+      color: observable,
+    });
+  }
+}
+
+export class TextItem extends BasicItem {
   kind = "text" as const;
   text: string;
 
-  constructor({ text, ...rest }: Partial<TextItem> & { text: string }) {
+  constructor({ text, ...rest }: Partial<TextItem> & Pick<TextItem, "text">) {
     super(rest);
     this.text = text;
 
@@ -43,7 +56,7 @@ export class TextItem extends Item {
   }
 }
 
-export class ImageItem extends Item {
+export class ImageItem extends BasicItem {
   kind = "image" as const;
   imageUrl: string;
   placeholderUrl?: string;
@@ -52,7 +65,7 @@ export class ImageItem extends Item {
     imageUrl,
     placeholderUrl,
     ...rest
-  }: Partial<ImageItem> & { imageUrl: string }) {
+  }: Partial<ImageItem> & Pick<ImageItem, "imageUrl">) {
     super(rest);
     this.imageUrl = imageUrl;
     this.placeholderUrl = placeholderUrl;
@@ -64,4 +77,28 @@ export class ImageItem extends Item {
   }
 }
 
-export type IItem = TextItem | ImageItem;
+export class SvgItem extends Item {
+  kind = "svg" as const;
+  path: string;
+  width: number;
+  height: number;
+  commands: SVGCommand[];
+  strokeWidth = 2;
+  color = "red";
+
+  constructor({ path, ...rest }: Partial<SvgItem> & Pick<SvgItem, "path">) {
+    super(rest);
+    this.path = path;
+    const pathData = new SVGPathData(path);
+    const bounds = pathData.getBounds();
+    this.width = bounds.maxX - bounds.minX;
+    this.height = bounds.maxY - bounds.minY;
+    this.commands = pathData.commands;
+
+    makeObservable(this, {
+      path: observable,
+    });
+  }
+}
+
+export type IItem = TextItem | ImageItem | SvgItem;

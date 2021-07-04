@@ -2,14 +2,7 @@ import Reconciler from "react-reconciler";
 import { unstable_now as now } from "scheduler";
 import { CanvasRenderer } from "./CanvasRenderer";
 import { HasChildren } from "./HasChildren";
-import {
-  BaseElement,
-  Image,
-  Svg,
-  SvgChild,
-  Text,
-  View,
-} from "./YogaComponents";
+import { BaseElement, Image, Svg, SvgPath, Text, View } from "./YogaComponents";
 
 const roots = new Map<CanvasRenderer, Reconciler.FiberRoot>();
 
@@ -36,7 +29,7 @@ type Props = JSX.IntrinsicElements["c-view"] & {
 };
 
 let Renderer = Reconciler<
-  "c-view" | "c-text" | "c-image" | "c-svg" | "path",
+  "c-view" | "c-text" | "c-image" | "c-svg" | "c-svg-path",
   Props,
   CanvasRenderer,
   BaseElement,
@@ -65,8 +58,8 @@ let Renderer = Reconciler<
       case "c-svg": {
         return new Svg(props as any, container);
       }
-      case "path": {
-        return new SvgChild(props as any, container);
+      case "c-svg-path": {
+        return new SvgPath(props as any, container);
       }
       default:
         throw new Error(`unknown type ${type}`);

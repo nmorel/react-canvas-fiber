@@ -1,6 +1,6 @@
 import { makeAutoObservable, makeObservable, observable } from "mobx";
 import { identityMatrix } from "../constants/defaultValues";
-import { IItem, ImageItem, TextItem } from "./item";
+import { IItem, ImageItem, SvgItem, TextItem } from "./item";
 import largeImagePlaceholder from "../assets/react.png";
 import largeImage from "../assets/large_image_original.jpeg";
 
@@ -72,6 +72,12 @@ export class Store {
         color: "#7FB285",
         placeholderUrl: largeImagePlaceholder,
         imageUrl: largeImagePlaceholder,
+      }),
+      new SvgItem({
+        left: 360,
+        top: 400,
+        scale: 1.2,
+        path: "M0 0L0 100L100 100L100 0z",
       })
     );
   }

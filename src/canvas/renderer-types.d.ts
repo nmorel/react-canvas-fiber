@@ -10,6 +10,8 @@ import {
   BaseElement,
   SvgProps,
   Svg,
+  SvgPath,
+  SvgPathProps,
 } from "./YogaComponents";
 
 type CanvasElement<T extends BaseElement> = {
@@ -95,6 +97,7 @@ declare global {
       "c-text": TextProps & CanvasElement<Text>;
       "c-image": ImageProps & CanvasElement<Image>;
       "c-svg": SvgProps & CanvasElement<Svg>;
+      "c-svg-path": SvgPathProps & CanvasElement<SvgPath>;
     }
   }
 }

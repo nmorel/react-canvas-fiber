@@ -619,6 +619,11 @@ supports-color@^5.3.0:
   dependencies:
     has-flag "^3.0.0"
 
+svg-pathdata@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/svg-pathdata/-/svg-pathdata-6.0.0.tgz#53fc61dcdbd2cb51359f2484e890c63371f1e977"
+  integrity sha512-8XoCZjKbP0fvJbDsm6KFxVau2N3SkWkMj8OniADm87q4OiFXk/gSgri5Uyr8hE1fQ9npI+9XzRlTUObgWmBBNw==
+
 to-fast-properties@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/to-fast-properties/-/to-fast-properties-2.0.0.tgz#dc5e698cbd079265bc73e0377681a4e4e83f616e"

@@ -72,9 +72,6 @@ export const App = observer(function App() {
         >
           {!!store.width && !!store.height && (
             <Canvas>
-              <c-svg width={200} height={200}>
-                <path d="M0 0L0 200L200 200L200 0z" />
-              </c-svg>
               {store.items.map((item) => (
                 <Item key={item.id} item={item} />
               ))}

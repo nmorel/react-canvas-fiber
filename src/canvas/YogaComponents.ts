@@ -54,6 +54,9 @@ import {
 } from "./Style";
 import type { TextBreaker } from "../utils/text-breaker";
 import { defaultBounds, identityMatrix } from "../constants/defaultValues";
+import { SVGPathData } from "svg-pathdata";
+import { SVGCommand } from "svg-pathdata/lib/types";
+import { svgToCanvas } from "../utils/svgPathToCanvas";
 
 const flexDirectionToYoga: Record<
   Exclude<ViewProps["flexDirection"], undefined>,
@@ -702,35 +705,19 @@ export class Svg extends BaseElement<SvgProps> {
   }
 }
 
-type SvgChildProps = Record<string, any>;
-export class SvgChild extends HasChildren {
-  container: CanvasRenderer;
-  node: YogaNode;
-  bounds = defaultBounds;
-  props: SvgChildProps;
+export type SvgPathProps = BaseStyleProps & {
+  commands: SVGCommand[];
+  strokeWidth: number;
+  strokeColor: string;
+};
 
-  constructor(props: SvgChildProps, container: CanvasRenderer) {
-    super();
-    this.container = container;
-    this.props = props;
-  }
-
-  update(props: SvgChildProps) {
-    if (this.parent) {
-      let child = this.parent as BaseElement;
-      while (child.parent && this.container !== child.parent) {
-        child = child.parent as BaseElement;
-      }
-      this.container.requestDraw("child", child);
-    }
-    this.props = props;
-  }
-
-  render(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D) {
-    console.log("render svg child", this.props);
-  }
-
-  destroy() {
-    // noop
+export class SvgPath extends BaseElement<SvgPathProps> {
+  renderStyleAndContent(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
+  ): void {
+    svgToCanvas(this.props.commands, ctx);
+    ctx.lineWidth = this.props.strokeWidth;
+    ctx.strokeStyle = this.props.strokeColor;
+    ctx.stroke();
   }
 }
