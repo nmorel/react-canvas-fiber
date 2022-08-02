@@ -1,35 +1,8 @@
 {
-  "name": "react-canvas-fiber",
+  "name": "@react-canvas/react-canvas",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@react-pdf/yoga": "^2.0.4",
-    "lodash-es": "^4.17.21",
-    "mobx": "^6.6.1",
-    "mobx-react": "^7.5.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-reconciler": "^0.29.0",
-    "resize-observer-polyfill": "^1.5.1",
-    "scheduler": "^0.23.0",
-    "use-asset": "^1.0.4",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@types/lodash-es": "^4.17.6",
-    "@types/react": "^18.0.15",
-    "@types/react-dom": "^18.0.6",
-    "@types/react-reconciler": "^0.28.0",
-    "@types/scheduler": "^0.16.2",
-    "@types/uuid": "^8.3.4",
-    "@vitejs/plugin-react": "^2.0.0",
-    "prettier": "^2.7.1",
-    "typescript": "^4.7.4",
-    "vite": "^3.0.4"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "serve": "vite preview"
-  }
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {}
 }
