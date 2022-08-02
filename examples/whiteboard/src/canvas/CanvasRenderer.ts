@@ -4,7 +4,7 @@ import { difference, intersection, debounce } from "lodash-es";
 import { newTextBreaker } from "../utils/text-breaker";
 import type { TextBreaker } from "../utils/text-breaker";
 import { defaultBounds, identityMatrix } from "../constants/defaultValues";
-import { createOffscreenCanvas } from "../utils/createOffscreenCanvas";
+import { createOffscreenCanvas } from "@react-canvas/create-offscreen-canvas";
 
 function mergeBounds(...bounds: Array<typeof defaultBounds>) {
   let left = +Infinity;
@@ -359,9 +359,8 @@ export class CanvasRenderer extends HasChildren {
 
     const pointer = this._convertEvtPointer(evt);
     const transformedPointer = this._convertPointerToCanvasCoordinates(pointer);
-    const lastHoveredTarget = this.lastHoveredTargets[
-      this.lastHoveredTargets.length - 1
-    ];
+    const lastHoveredTarget =
+      this.lastHoveredTargets[this.lastHoveredTargets.length - 1];
     let customEvent = this._createEvent(
       evt,
       lastHoveredTarget,
@@ -437,9 +436,8 @@ export class CanvasRenderer extends HasChildren {
           intersection(this.lastHoveredTargets, targets).length !==
             this.lastHoveredTargets.length)
       ) {
-        const lastHoveredTarget = this.lastHoveredTargets[
-          this.lastHoveredTargets.length - 1
-        ];
+        const lastHoveredTarget =
+          this.lastHoveredTargets[this.lastHoveredTargets.length - 1];
         let customEvent = this._createEvent(
           evt,
           lastHoveredTarget,

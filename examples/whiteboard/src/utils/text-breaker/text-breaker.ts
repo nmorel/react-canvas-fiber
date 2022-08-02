@@ -1,5 +1,5 @@
 import { memoize } from "lodash-es";
-import { createOffscreenCanvas } from "../createOffscreenCanvas";
+import { createOffscreenCanvas } from "@react-canvas/create-offscreen-canvas";
 
 import {
   findNextGraphemeBreak,
