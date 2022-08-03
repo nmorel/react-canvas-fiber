@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@react-canvas/create-offscreen-canvas": "workspace:*",
+    "@react-canvas/text-breaker": "workspace:*",
     "@react-pdf/yoga": "^2.0.4",
     "lodash-es": "^4.17.21",
     "mobx": "^6.6.1",

@@ -8,6 +8,7 @@ importers:
   examples/whiteboard:
     specifiers:
       '@react-canvas/create-offscreen-canvas': workspace:*
+      '@react-canvas/text-breaker': workspace:*
       '@react-pdf/yoga': ^2.0.4
       '@types/lodash-es': ^4.17.6
       '@types/react': ^18.0.15
@@ -31,6 +32,7 @@ importers:
       vite: ^3.0.4
     dependencies:
       '@react-canvas/create-offscreen-canvas': link:../../packages/create-offscreen-canvas
+      '@react-canvas/text-breaker': link:../../packages/text-breaker
       '@react-pdf/yoga': 2.0.4
       lodash-es: 4.17.21
       mobx: 6.6.1
@@ -56,6 +58,14 @@ importers:
 
   packages/create-offscreen-canvas:
     specifiers: {}
+
+  packages/text-breaker:
+    specifiers:
+      '@react-canvas/create-offscreen-canvas': workspace:*
+      lodash-es: ^4.17.21
+    dependencies:
+      '@react-canvas/create-offscreen-canvas': link:../create-offscreen-canvas
+      lodash-es: 4.17.21
 
 packages:
 

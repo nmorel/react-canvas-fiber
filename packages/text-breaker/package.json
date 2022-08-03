@@ -1,0 +1,10 @@
+{
+  "name": "@react-canvas/text-breaker",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@react-canvas/create-offscreen-canvas": "workspace:*",
+    "lodash-es": "^4.17.21"
+  },
+  "scripts": {}
+}

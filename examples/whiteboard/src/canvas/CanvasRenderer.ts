@@ -1,8 +1,8 @@
 import { HasChildren } from "./HasChildren";
 import { View, ViewProps } from "./YogaComponents";
 import { difference, intersection, debounce } from "lodash-es";
-import { newTextBreaker } from "../utils/text-breaker";
-import type { TextBreaker } from "../utils/text-breaker";
+import { newTextBreaker } from "@react-canvas/text-breaker";
+import type { TextBreaker } from "@react-canvas/text-breaker";
 import { defaultBounds, identityMatrix } from "../constants/defaultValues";
 import { createOffscreenCanvas } from "@react-canvas/create-offscreen-canvas";
 
