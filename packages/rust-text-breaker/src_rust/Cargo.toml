@@ -21,6 +21,7 @@ features = [
   'HtmlCanvasElement',
   'TextMetrics',
   'Window',
+  'console',
 ]
 
 [dev-dependencies]

@@ -1,0 +1,21 @@
+{
+  "name": "@react-canvas/rust-text-breaker",
+  "version": "1.0.0",
+  "files": [
+    "dist/index_bg.wasm",
+    "dist/index.js",
+    "dist/index_bg.js",
+    "dist/index.d.ts"
+  ],
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "wasm-pack build --out-dir ../dist --out-name index src_rust",
+    "test": "wasm-pack test --headless --chrome src_rust",
+    "test:watch": "nodemon --exec \"pnpm test\" --watch src_rust/src/*.rs --watch src_rust/tests/*.rs --watch src_rust/Cargo.toml"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
